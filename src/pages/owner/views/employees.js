@@ -134,10 +134,16 @@ async function loadInvites(root, profile) {
 }
 
 async function loadEmployees(root, profile) {
+  // 전체 매장 목록 (select 드롭다운용)
+  const { data: allStores } = await supabase
+    .from('stores').select('id, name')
+    .eq('tenant_id', profile.tenant_id).order('name');
+  const stores = allStores || [];
+
   // wage_type / deduction_type 컬럼이 없는 구 DB 대비 fallback
   let { data, error } = await supabase
     .from('profiles')
-    .select('id, name, phone, hourly_wage, wage_type, deduction_type, position, active, store:stores(name)')
+    .select('id, name, phone, hourly_wage, wage_type, deduction_type, position, active, store_id, store:stores(name)')
     .eq('tenant_id', profile.tenant_id)
     .eq('role', 'employee')
     .order('name');
@@ -146,7 +152,7 @@ async function loadEmployees(root, profile) {
     toast('⚠️ DB 컬럼이 부족합니다. supabase/migrations/0005_wage_type.sql 을 Supabase SQL Editor에서 실행해주세요.', 'warn', 8000);
     const fb = await supabase
       .from('profiles')
-      .select('id, name, phone, hourly_wage, position, active, store:stores(name)')
+      .select('id, name, phone, hourly_wage, position, active, store_id, store:stores(name)')
       .eq('tenant_id', profile.tenant_id)
       .eq('role', 'employee')
       .order('name');
@@ -173,11 +179,20 @@ async function loadEmployees(root, profile) {
       : '';
     const ded = r.deduction_type || 'insurance';
 
+    const storeOptions = stores.map(s =>
+      `<option value="${s.id}" ${r.store_id === s.id ? 'selected' : ''}>${s.name}</option>`
+    ).join('');
+
     return `
     <tr data-id="${r.id}">
       <td><strong>${r.name}</strong></td>
       <td>${r.phone || '-'}</td>
-      <td>${r.store?.name || '-'}</td>
+      <td>
+        <select class="cell-edit" data-field="store_id" style="width:120px;font-size:12px">
+          <option value="" ${!r.store_id ? 'selected' : ''}>매장 미지정</option>
+          ${storeOptions}
+        </select>
+      </td>
       <td>
         <select class="cell-edit" data-field="wage_type" style="width:72px;font-size:12px">
           <option value="hourly"  ${wt === 'hourly'  ? 'selected' : ''}>시급</option>
@@ -243,6 +258,7 @@ async function loadEmployees(root, profile) {
         const f = el.dataset.field;
         if (el.type === 'checkbox') updates[f] = el.checked;
         else if (el.type === 'number') updates[f] = +el.value;
+        else if (f === 'store_id') updates[f] = el.value || null;  // 빈 문자열 → null
         else updates[f] = el.value;
       });
       // 최저임금 미만 경고 확인
