@@ -1,0 +1,22 @@
+[build]
+  command   = "npm run build"
+  publish   = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# SPA 리다이렉트 — 모든 경로를 해당 HTML로 포워딩
+[[redirects]]
+  from = "/dashboard/*"
+  to   = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/employee/*"
+  to   = "/employee.html"
+  status = 200
+
+[[redirects]]
+  from = "/login/*"
+  to   = "/login.html"
+  status = 200

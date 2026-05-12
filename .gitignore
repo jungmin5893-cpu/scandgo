@@ -1,0 +1,14 @@
+node_modules
+dist
+dev-dist
+.env
+.env.local
+.env.*.local
+.DS_Store
+Thumbs.db
+*.log
+.vscode
+.idea
+.vite
+supabase/.branches
+supabase/.temp

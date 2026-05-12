@@ -1,0 +1,26 @@
+{
+  "name": "tapin2",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "TAGIN — B2B 출퇴근 관리 SaaS (PWA)",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview --host",
+    "supabase:start": "supabase start",
+    "supabase:push": "supabase db push",
+    "supabase:reset": "supabase db reset"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "dayjs": "^1.11.13",
+    "qr-scanner": "^1.4.2",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0",
+    "vite-plugin-pwa": "^0.20.0",
+    "workbox-window": "^7.1.0"
+  }
+}

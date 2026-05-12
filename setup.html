@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TAGIN — Supabase 셋업이 필요합니다</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter','Malgun Gothic','Apple SD Gothic Neo',sans-serif;background:linear-gradient(145deg,#060d16,#0f1b2d,#0d2a3a);color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+.card{background:#fff;color:#0f1b2d;border-radius:20px;max-width:640px;width:100%;padding:36px 32px;box-shadow:0 20px 60px rgba(0,0,0,.35);}
+h1{font-size:24px;font-weight:900;margin-bottom:8px;}
+h1 span{color:#00c9a7;}
+.sub{color:#8a94a6;font-size:14px;margin-bottom:24px;}
+.step{padding:14px 16px;background:#f4f6f9;border-radius:10px;margin-bottom:10px;border-left:4px solid #00c9a7;}
+.step b{display:block;margin-bottom:4px;font-size:14px;}
+.step .desc{font-size:13px;color:#3d4a5c;line-height:1.6;}
+.step code{background:#0f1b2d;color:#00c9a7;padding:2px 8px;border-radius:4px;font-size:12px;font-family:'Courier New',monospace;}
+.step a{color:#00c9a7;font-weight:700;text-decoration:none;}
+.step a:hover{text-decoration:underline;}
+.note{margin-top:20px;padding:14px 16px;background:#fff7e6;border-radius:10px;font-size:13px;color:#92660d;line-height:1.6;}
+.btn{display:inline-block;margin-top:20px;padding:12px 24px;background:linear-gradient(135deg,#00c9a7,#00b096);color:#fff;border-radius:10px;font-weight:800;text-decoration:none;box-shadow:0 4px 14px rgba(0,201,167,.3);font-size:14px;border:none;cursor:pointer;}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>TAG<span>IN</span> 셋업이 필요합니다</h1>
+  <p class="sub">Supabase 연결이 안 되어있어요. 아래 단계를 마치면 로그인 화면으로 자동 이동합니다.</p>
+
+  <div class="step">
+    <b>1. Supabase 프로젝트 만들기</b>
+    <div class="desc"><a href="https://supabase.com/dashboard" target="_blank">supabase.com/dashboard</a>에서 새 프로젝트 생성 (무료 티어). 비밀번호와 리전(Tokyo 권장)을 정하고 ~2분 기다리면 준비 완료.</div>
+  </div>
+
+  <div class="step">
+    <b>2. SQL 마이그레이션 4개 실행</b>
+    <div class="desc">왼쪽 메뉴 <b>SQL Editor</b> → <code>tapin2/supabase/migrations/</code> 폴더의 4개 파일을 순서대로 붙여넣고 실행:
+      <br>① <code>0001_schema.sql</code> ② <code>0002_rls.sql</code> ③ <code>0003_functions.sql</code> ④ <code>0004_realtime.sql</code>
+    </div>
+  </div>
+
+  <div class="step">
+    <b>3. Auth Hook 등록</b>
+    <div class="desc"><b>Authentication → Hooks</b> → "Custom Access Token" 활성화 → Function: <code>public.set_jwt_claims</code> 선택 후 Save</div>
+  </div>
+
+  <div class="step">
+    <b>4. Email 인증 설정</b>
+    <div class="desc"><b>Authentication → Providers → Email</b>에서 "Confirm email"을 <b>꺼주세요</b> (개발 중 권장)</div>
+  </div>
+
+  <div class="step">
+    <b>5. URL과 anon key를 .env.local에 입력</b>
+    <div class="desc"><b>Project Settings → API</b>에서 <code>Project URL</code>과 <code>anon public</code> 키를 복사해서<br>
+      <code>tapin2/.env.local</code> 파일을 열어 다음 두 줄에 붙여넣기:
+      <br><br>
+      <code style="display:block;padding:8px 12px;background:#0f1b2d;color:#00c9a7;border-radius:6px;line-height:1.6;font-size:11px;">
+        VITE_SUPABASE_URL=https://xxxx.supabase.co<br>
+        VITE_SUPABASE_ANON_KEY=eyJhbGc...
+      </code>
+    </div>
+  </div>
+
+  <div class="step">
+    <b>6. dev 서버 재시작</b>
+    <div class="desc">터미널에서 <code>Ctrl+C</code> 후 다시 <code>npm run dev</code></div>
+  </div>
+
+  <div class="note">
+    📚 자세한 절차는 <code>README.md</code>와 <code>supabase/README.md</code>를 참고하세요.<br>
+    셋업이 끝나면 이 화면 대신 로그인 페이지가 나옵니다.
+  </div>
+
+  <a class="btn" href="login.html">셋업 끝났어요 — 로그인으로 →</a>
+</div>
+</body>
+</html>
