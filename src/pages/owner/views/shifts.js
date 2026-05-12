@@ -306,11 +306,21 @@ function openCellPicker(td, root, profile) {
   const state = root._shiftState;
   const empId = td.dataset.emp;
   const dateStr = td.dataset.date;
+
   const popup = document.createElement('div');
   popup.className = 'cell-picker cal-picker';
+
+  const dateLabel = new Date(dateStr + 'T00:00:00').toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
   popup.innerHTML = `
-    <div class="picker-row" data-action="clear"><span class="muted">기본(요일 패턴)</span></div>
-    <div class="picker-row" data-action="off"><span class="cal-off-pill">휴무</span></div>
+    <div class="picker-title">${dateLabel}</div>
+    <div class="picker-row" data-action="clear">
+      <span class="dot" style="background:#dbe0e8"></span>
+      <span style="color:var(--gray3)">기본 (요일 패턴 따르기)</span>
+    </div>
+    <div class="picker-row" data-action="off">
+      <span class="dot" style="background:#f0f1f5"></span>
+      <span class="cal-off-pill">휴무</span>
+    </div>
     ${state.shiftTypes.map(st => `
       <div class="picker-row" data-id="${st.id}">
         <span class="dot" style="background:${st.color}"></span>
@@ -319,16 +329,36 @@ function openCellPicker(td, root, profile) {
       </div>
     `).join('')}
   `;
-  td.appendChild(popup);
+
+  // fixed 포지션: 셀 기준으로 뷰포트 안에 들어오게 배치
+  document.body.appendChild(popup);
+  const tdRect = td.getBoundingClientRect();
+  const pw = popup.offsetWidth || 240;
+  const ph = popup.offsetHeight || 200;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  let left = tdRect.left + tdRect.width / 2 - pw / 2;
+  let top  = tdRect.bottom + 6;
+
+  // 오른쪽 넘침 방지
+  if (left + pw > vw - 8) left = vw - pw - 8;
+  if (left < 8) left = 8;
+  // 아래쪽 넘침 → 위로 뒤집기
+  if (top + ph > vh - 8) top = tdRect.top - ph - 6;
+  if (top < 8) top = 8;
+
+  popup.style.left = left + 'px';
+  popup.style.top  = top  + 'px';
 
   popup.addEventListener('click', async (e) => {
     const row = e.target.closest('.picker-row');
     if (!row) return;
     e.stopPropagation();
+    popup.remove();
     try {
-      let saved;
       if (row.dataset.action === 'clear') {
-        saved = await upsertShiftSchedule({
+        await upsertShiftSchedule({
           tenantId: profile.tenant_id,
           storeId: state.selectedStoreId,
           employeeId: empId, workDate: dateStr,
@@ -336,14 +366,14 @@ function openCellPicker(td, root, profile) {
         });
         state.schedules.delete(`${empId}|${dateStr}`);
       } else if (row.dataset.action === 'off') {
-        saved = await setOffDay({
+        const saved = await setOffDay({
           tenantId: profile.tenant_id,
           storeId: state.selectedStoreId,
           employeeId: empId, workDate: dateStr,
         });
         state.schedules.set(`${empId}|${dateStr}`, saved);
       } else {
-        saved = await upsertShiftSchedule({
+        const saved = await upsertShiftSchedule({
           tenantId: profile.tenant_id,
           storeId: state.selectedStoreId,
           employeeId: empId, workDate: dateStr,
@@ -352,15 +382,13 @@ function openCellPicker(td, root, profile) {
         state.schedules.set(`${empId}|${dateStr}`, saved);
       }
       td.innerHTML = cellHtml(state.schedules.get(`${empId}|${dateStr}`), state.shiftTypes);
-      popup.remove();
     } catch (err) {
       toast(err.message, 'error');
-      popup.remove();
     }
   });
 
   const closeOnOutside = (e) => {
-    if (!popup.contains(e.target) && e.target !== td) {
+    if (!popup.contains(e.target)) {
       popup.remove();
       document.removeEventListener('click', closeOnOutside, true);
     }

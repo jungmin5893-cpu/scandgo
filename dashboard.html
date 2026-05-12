@@ -174,23 +174,30 @@ select.cell-edit{cursor:pointer;}
 .store-pick-card strong{font-size:16px;color:var(--dark);}
 
 /* ── 시프트 캘린더 (간트 차트형) ── */
-.cal-scroll-wrap{overflow-x:auto;max-width:100%;}
-.cal-grid{border-collapse:separate;border-spacing:0;font-size:11px;background:#fff;}
-.cal-grid th{position:sticky;top:0;background:var(--gray1);padding:6px 4px;text-align:center;border-bottom:2px solid var(--gray2);min-width:36px;font-weight:700;color:var(--gray4);}
+.cal-scroll-wrap{overflow-x:auto;max-width:100%;padding-bottom:4px;}
+.cal-grid{border-collapse:separate;border-spacing:0;font-size:13px;background:#fff;}
+.cal-grid th{position:sticky;top:0;background:var(--gray1);padding:10px 6px;text-align:center;border-bottom:2px solid var(--gray2);min-width:58px;font-weight:700;color:var(--gray4);}
 .cal-grid th.weekend{background:#fff3e0;color:#e65100;}
-.cal-grid th .d-num{font-size:13px;font-weight:800;color:var(--dark);}
-.cal-grid th .d-dow{font-size:10px;color:var(--gray3);}
+.cal-grid th .d-num{font-size:15px;font-weight:800;color:var(--dark);}
+.cal-grid th .d-dow{font-size:11px;color:var(--gray3);margin-top:2px;}
 .cal-grid th.weekend .d-dow{color:#e65100;}
-.cal-grid td{padding:4px;border-bottom:1px solid var(--gray2);border-right:1px solid var(--gray2);text-align:center;vertical-align:middle;min-width:36px;height:42px;}
-.cal-grid .emp-col{position:sticky;left:0;background:#fff;z-index:2;text-align:left;padding:8px 12px;min-width:120px;border-right:2px solid var(--gray2);}
+.cal-grid td{padding:5px;border-bottom:1px solid var(--gray2);border-right:1px solid var(--gray2);text-align:center;vertical-align:middle;min-width:58px;height:58px;}
+.cal-grid .emp-col{position:sticky;left:0;background:#fff;z-index:2;text-align:left;padding:10px 14px;min-width:150px;border-right:2px solid var(--gray2);white-space:nowrap;}
 .cal-grid th.emp-col{background:var(--gray1);z-index:3;}
 .cal-cell{cursor:pointer;position:relative;}
 .cal-cell:hover{background:var(--green3);}
-.cal-shift{display:inline-block;padding:3px 6px;border-radius:6px;border:1.5px solid;font-weight:700;font-size:10px;line-height:1.2;}
-.cal-off{display:inline-block;padding:3px 8px;border-radius:6px;background:#f0f1f5;color:#8a94a6;font-weight:700;font-size:10px;}
-.cal-off-pill{display:inline-block;padding:3px 10px;border-radius:6px;background:#f0f1f5;color:#3d4a5c;font-weight:700;font-size:12px;}
-.cal-empty{color:#dbe0e8;font-size:14px;}
-.cal-picker{position:absolute;left:50%;top:100%;transform:translateX(-50%);background:#fff;border:1px solid var(--gray2);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:6px;min-width:200px;z-index:60;}
+.cal-shift{display:inline-block;padding:5px 7px;border-radius:7px;border:1.5px solid;font-weight:700;font-size:12px;line-height:1.3;max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cal-off{display:inline-block;padding:5px 8px;border-radius:7px;background:#f0f1f5;color:#8a94a6;font-weight:700;font-size:12px;}
+.cal-off-pill{display:inline-block;padding:6px 12px;border-radius:7px;background:#f0f1f5;color:#3d4a5c;font-weight:700;font-size:13px;}
+.cal-empty{color:#dbe0e8;font-size:18px;}
+/* 팝업은 JS에서 fixed 위치 계산으로 처리 */
+.cal-picker{position:fixed;background:#fff;border:1.5px solid var(--gray2);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.22);padding:8px;min-width:230px;z-index:9999;}
+.cal-picker .picker-title{padding:6px 10px 8px;font-size:11px;font-weight:700;color:var(--gray3);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--gray2);margin-bottom:4px;}
+.picker-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:14px;}
+.picker-row:hover{background:var(--green3);}
+.picker-row .dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.picker-row strong{font-weight:700;}
+.picker-row .muted{font-size:12px;color:var(--gray3);margin-left:auto;}
 
 /* ── 급여 모달 (직원 월간 근무표) ── */
 .pay-modal{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;}
