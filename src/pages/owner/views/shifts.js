@@ -48,12 +48,16 @@ export async function renderShifts({ root, profile }) {
         <div class="card-sub">셀 클릭 → 시프트/휴무 선택. 시프트 변경은 즉시 저장됩니다.</div>
       </div>
 
-      <div class="filter-bar">
-        <button class="btn small" id="btn-prev-month">◀</button>
-        <strong id="month-label" style="min-width:120px;text-align:center;font-size:15px"></strong>
-        <button class="btn small" id="btn-next-month">▶</button>
+        <div class="filter-bar" style="flex-wrap:wrap;gap:8px">
+        <div class="view-toggle" id="view-toggle">
+          <button data-view="week" class="active">주간</button>
+          <button data-view="month">월간</button>
+        </div>
+        <button class="btn small" id="btn-prev-period">◀</button>
+        <strong id="period-label" style="min-width:160px;text-align:center;font-size:15px"></strong>
+        <button class="btn small" id="btn-next-period">▶</button>
         <span style="flex:1"></span>
-        <button class="btn small ghost" id="btn-copy-prev-week" title="가장 최근 완성된 한 주를 다음 주로 복사">📋 이전 주 복사</button>
+        <button class="btn small ghost" id="btn-copy-prev-week" title="이전 주 스케줄을 다음 주로 복사">📋 이전 주 복사</button>
         <button class="btn small ghost" id="btn-copy-prev-month" title="저번 달 패턴을 이번 달로 복사">📋 전월 복사</button>
         <button class="btn small ghost" id="btn-seed-weekday" title="요일 패턴에서 이번 달 자동 채우기">🌱 요일 패턴 시드</button>
       </div>
@@ -70,7 +74,8 @@ export async function renderShifts({ root, profile }) {
     selectedStoreId: null,
     employees: [],
     schedules: new Map(), // `${empId}|${dateStr}` → row
-    cursor: new Date(),  // 보고 있는 달
+    cursor: new Date(),   // 기준 날짜
+    viewMode: 'week',     // 'week' | 'month'
   };
 
   root._profile = profile;
@@ -97,8 +102,16 @@ export async function renderShifts({ root, profile }) {
     } catch (err) { toast(err.message, 'error'); }
   });
 
-  root.querySelector('#btn-prev-month').addEventListener('click', () => moveMonth(root, profile, -1));
-  root.querySelector('#btn-next-month').addEventListener('click', () => moveMonth(root, profile, +1));
+  root.querySelector('#btn-prev-period').addEventListener('click', () => movePeriod(root, profile, -1));
+  root.querySelector('#btn-next-period').addEventListener('click', () => movePeriod(root, profile, +1));
+  root.querySelectorAll('#view-toggle button').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      root.querySelectorAll('#view-toggle button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      root._shiftState.viewMode = btn.dataset.view;
+      await reloadPeriod(root, profile);
+    });
+  });
   root.querySelector('#btn-back-stores').addEventListener('click', () => {
     root._shiftState.selectedStoreId = null;
     root.querySelector('#card-calendar').style.display = 'none';
@@ -213,14 +226,13 @@ async function loadCalendar(root, profile) {
     .order('name');
   state.employees = emps || [];
 
-  await reloadMonth(root, profile);
+  await reloadPeriod(root, profile);
 }
 
-async function reloadMonth(root, profile) {
+async function reloadPeriod(root, profile) {
   const state = root._shiftState;
-  const { start, end } = monthRange(state.cursor);
-  root.querySelector('#month-label').textContent =
-    `${state.cursor.getFullYear()}년 ${state.cursor.getMonth() + 1}월`;
+  const { start, end, label } = periodRange(state.cursor, state.viewMode);
+  root.querySelector('#period-label').textContent = label;
 
   let scheds = [];
   try {
@@ -231,7 +243,7 @@ async function reloadMonth(root, profile) {
     });
   } catch (err) {
     if (/shift_schedules/i.test(err.message)) {
-      toast('⚠️ shift_schedules 테이블이 없습니다. supabase/migrations/0006_shift_schedules.sql 을 실행해주세요.', 'warn', 8000);
+      toast('⚠️ shift_schedules 테이블이 없습니다. 0006_shift_schedules.sql 을 실행해주세요.', 'warn', 8000);
     } else {
       toast(err.message, 'error');
     }
@@ -246,36 +258,42 @@ async function reloadMonth(root, profile) {
 function renderGrid(root, profile) {
   const state = root._shiftState;
   const grid = root.querySelector('#cal-grid');
-  const { days } = monthRange(state.cursor);
+  const isMonth = state.viewMode === 'month';
+  const { days } = periodRange(state.cursor, state.viewMode);
+  const todayStr = new Date().toISOString().slice(0, 10);
+
+  grid.className = isMonth ? 'cal-grid monthly' : 'cal-grid';
 
   if (!state.employees.length) {
-    grid.innerHTML = `<thead><tr><th>이 매장에 활성 직원이 없습니다</th></tr></thead>`;
+    grid.innerHTML = `<thead><tr><th class="emp-col">직원</th><th>이 매장에 활성 직원이 없습니다</th></tr></thead>`;
     return;
   }
 
-  // 헤더: 이름 | 1(일) | 2(월) | ...
+  // 헤더
   let html = '<thead><tr><th class="emp-col">직원</th>';
   for (const d of days) {
     const dow = d.getDay();
-    const isWeekend = dow === 0 || dow === 6;
-    html += `<th class="${isWeekend ? 'weekend' : ''}">
+    const ds  = d.toISOString().slice(0, 10);
+    const cls = [dow === 0 || dow === 6 ? 'weekend' : '', ds === todayStr ? 'today-col' : ''].filter(Boolean).join(' ');
+    html += `<th class="${cls}">
       <div class="d-num">${d.getDate()}</div>
       <div class="d-dow">${DOW[dow]}</div>
     </th>`;
   }
   html += '</tr></thead><tbody>';
 
-  // 바디: 직원 행
+  // 직원 행
   for (const emp of state.employees) {
-    html += `<tr><td class="emp-col"><strong>${emp.name}</strong>${
-      emp.position ? `<div class="muted">${emp.position}</div>` : ''
-    }</td>`;
+    html += `<tr>
+      <td class="emp-col">
+        <strong style="font-size:14px">${emp.name}</strong>
+        ${emp.position ? `<div class="muted" style="font-size:11px;margin-top:2px">${emp.position}</div>` : ''}
+      </td>`;
     for (const d of days) {
       const dateStr = d.toISOString().slice(0, 10);
       const sched = state.schedules.get(`${emp.id}|${dateStr}`);
-      html += `<td class="cal-cell"
-                  data-emp="${emp.id}"
-                  data-date="${dateStr}">${cellHtml(sched, state.shiftTypes)}</td>`;
+      const todayCls = dateStr === todayStr ? ' today-col' : '';
+      html += `<td class="cal-cell${todayCls}" data-emp="${emp.id}" data-date="${dateStr}">${cellHtml(sched, state.shiftTypes)}</td>`;
     }
     html += '</tr>';
   }
@@ -396,64 +414,74 @@ function openCellPicker(td, root, profile) {
   setTimeout(() => document.addEventListener('click', closeOnOutside, true), 50);
 }
 
-async function moveMonth(root, profile, delta) {
+async function movePeriod(root, profile, delta) {
   const state = root._shiftState;
-  state.cursor = new Date(state.cursor.getFullYear(), state.cursor.getMonth() + delta, 1);
-  await reloadMonth(root, profile);
+  if (state.viewMode === 'week') {
+    state.cursor = new Date(state.cursor.getTime() + delta * 7 * 86400000);
+  } else {
+    state.cursor = new Date(state.cursor.getFullYear(), state.cursor.getMonth() + delta, 1);
+  }
+  await reloadPeriod(root, profile);
 }
 
 async function copyPrevWeek(root, profile) {
-  // 이번 달에서 마지막으로 한 주(7일)가 모두 채워진 주를 찾아 그 다음 주로 복사
   const state = root._shiftState;
-  if (!state.schedules.size) {
-    toast('복사할 스케줄이 없습니다. 한 주 먼저 채워주세요.', 'warn');
-    return;
-  }
-  const { days } = monthRange(state.cursor);
-  // 가장 최근에 1개 이상 배정된 주의 월요일 찾기
+  // 현재 뷰의 주(week view) 또는 마지막 데이터 주(month view)를 기준으로 복사
+  const { days } = periodRange(state.cursor, state.viewMode);
   const datesWithData = days.filter(d => {
     const ds = d.toISOString().slice(0, 10);
     return state.employees.some(e => state.schedules.has(`${e.id}|${ds}`));
   });
-  if (!datesWithData.length) { toast('이번 달에 스케줄이 없습니다.', 'warn'); return; }
-  const lastDate = datesWithData[datesWithData.length - 1];
-  const monday = mondayOf(lastDate);
-  const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6);
-  const dstMonday = new Date(monday); dstMonday.setDate(monday.getDate() + 7);
 
-  if (!confirm(`${fmt(monday)} ~ ${fmt(sunday)} 의 스케줄을 ${fmt(dstMonday)} ~ ${fmt(new Date(dstMonday.getFullYear(),dstMonday.getMonth(),dstMonday.getDate()+6))} 로 복사할까요?`)) return;
+  let srcMonday;
+  if (state.viewMode === 'week') {
+    srcMonday = mondayOf(state.cursor);
+  } else {
+    if (!datesWithData.length) { toast('이번 달에 스케줄이 없습니다.', 'warn'); return; }
+    srcMonday = mondayOf(datesWithData[datesWithData.length - 1]);
+  }
+
+  const srcSunday  = new Date(srcMonday); srcSunday.setDate(srcMonday.getDate() + 6);
+  const dstMonday  = new Date(srcMonday); dstMonday.setDate(srcMonday.getDate() + 7);
+  const dstSunday  = new Date(dstMonday); dstSunday.setDate(dstMonday.getDate() + 6);
+
+  if (!confirm(`${fmt(srcMonday)} ~ ${fmt(srcSunday)} 스케줄을\n${fmt(dstMonday)} ~ ${fmt(dstSunday)} 로 복사할까요?`)) return;
 
   try {
     const n = await copyScheduleRange({
       tenantId: profile.tenant_id, storeId: state.selectedStoreId,
-      srcStart: fmt(monday), srcEnd: fmt(sunday), dstStart: fmt(dstMonday),
+      srcStart: fmt(srcMonday), srcEnd: fmt(srcSunday), dstStart: fmt(dstMonday),
     });
     toast(`${n}건 복사됨`, 'success');
-    await reloadMonth(root, profile);
+    // 복사 후 다음 주로 이동
+    state.cursor = dstMonday;
+    await reloadPeriod(root, profile);
   } catch (err) { toast(err.message, 'error'); }
 }
 
 async function copyPrevMonth(root, profile) {
   const state = root._shiftState;
-  const prev = new Date(state.cursor.getFullYear(), state.cursor.getMonth() - 1, 1);
-  const { start: ps, end: pe } = monthRange(prev);
-  const { start: cs } = monthRange(state.cursor);
-  if (!confirm(`${prev.getFullYear()}년 ${prev.getMonth() + 1}월 스케줄을 이번 달로 복사할까요? (기존 이번 달 스케줄은 덮어쓰여집니다)`)) return;
+  const base = new Date(state.cursor.getFullYear(), state.cursor.getMonth(), 1);
+  const prev = new Date(base.getFullYear(), base.getMonth() - 1, 1);
+  const { start: ps, end: pe } = periodRange(prev, 'month');
+  const { start: cs } = periodRange(base, 'month');
+  if (!confirm(`${prev.getFullYear()}년 ${prev.getMonth() + 1}월 스케줄을 이번 달로 복사할까요?\n(기존 이번 달 스케줄은 덮어쓰여집니다)`)) return;
   try {
     const n = await copyScheduleRange({
       tenantId: profile.tenant_id, storeId: state.selectedStoreId,
       srcStart: ps, srcEnd: pe, dstStart: cs,
     });
     toast(`${n}건 복사됨`, 'success');
-    await reloadMonth(root, profile);
+    await reloadPeriod(root, profile);
   } catch (err) { toast(err.message, 'error'); }
 }
 
 async function seedThisMonth(root, profile) {
   const state = root._shiftState;
-  if (!confirm('기존 요일 패턴(시프트 관리 구버전)을 이번 달 캘린더에 자동 채울까요?\n(이미 캘린더에 데이터가 있는 직원은 건너뜁니다)')) return;
+  const base = new Date(state.cursor.getFullYear(), state.cursor.getMonth(), 1);
+  if (!confirm('요일 패턴을 이번 달 캘린더에 자동 채울까요?\n(이미 캘린더에 데이터가 있는 직원은 건너뜁니다)')) return;
   try {
-    const { start, end } = monthRange(state.cursor);
+    const { start, end } = periodRange(base, 'month');
     const n = await seedFromWeekday({
       tenantId: profile.tenant_id,
       storeId: state.selectedStoreId,
@@ -461,18 +489,29 @@ async function seedThisMonth(root, profile) {
       monthStart: start, monthEnd: end,
     });
     toast(`${n}건 시드됨`, n > 0 ? 'success' : 'warn');
-    await reloadMonth(root, profile);
+    await reloadPeriod(root, profile);
   } catch (err) { toast(err.message, 'error'); }
 }
 
 // ── 유틸 ─────────────────────────────────────────────
-function monthRange(cursor) {
-  const y = cursor.getFullYear(), m = cursor.getMonth();
-  const first = new Date(y, m, 1);
-  const last = new Date(y, m + 1, 0);
-  const days = [];
-  for (let d = new Date(first); d <= last; d.setDate(d.getDate() + 1)) days.push(new Date(d));
-  return { start: fmt(first), end: fmt(last), days };
+function periodRange(cursor, viewMode) {
+  if (viewMode === 'week') {
+    // 이번 주 월~일
+    const mon = mondayOf(cursor);
+    const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+    const days = [];
+    for (let d = new Date(mon); d <= sun; d.setDate(d.getDate() + 1)) days.push(new Date(d));
+    const label = `${mon.getMonth() + 1}월 ${mon.getDate()}일 ~ ${sun.getMonth() + 1}월 ${sun.getDate()}일`;
+    return { start: fmt(mon), end: fmt(sun), days, label };
+  } else {
+    const y = cursor.getFullYear(), m = cursor.getMonth();
+    const first = new Date(y, m, 1);
+    const last  = new Date(y, m + 1, 0);
+    const days  = [];
+    for (let d = new Date(first); d <= last; d.setDate(d.getDate() + 1)) days.push(new Date(d));
+    const label = `${y}년 ${m + 1}월`;
+    return { start: fmt(first), end: fmt(last), days, label };
+  }
 }
 
 function fmt(d) {
@@ -483,7 +522,7 @@ function fmt(d) {
 function mondayOf(d) {
   const x = new Date(d);
   const dow = x.getDay();
-  const diff = dow === 0 ? -6 : 1 - dow;
+  const diff = dow === 0 ? -6 : 1 - dow; // 일요일이면 -6, 나머지는 월요일로
   x.setDate(x.getDate() + diff);
   return x;
 }
