@@ -85,9 +85,12 @@ function renderRow(t, owner) {
   const endDateStr = endDate
     ? endDate.toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit' })
     : '—';
-  const daysTag = daysLeft !== null
-    ? `<span style="font-size:11px;margin-left:4px;color:${daysLeft < 0 ? '#f04438' : daysLeft <= 7 ? '#f59e0b' : '#64748b'}">(${daysLeft > 0 ? `D-${daysLeft}` : daysLeft === 0 ? 'D-Day' : `${Math.abs(daysLeft)}일 초과'})</span>`
-    : '';
+  let daysTag = '';
+  if (daysLeft !== null) {
+    const tagColor = daysLeft < 0 ? '#f04438' : daysLeft <= 7 ? '#f59e0b' : '#64748b';
+    const tagText  = daysLeft > 0 ? 'D-' + daysLeft : daysLeft === 0 ? 'D-Day' : Math.abs(daysLeft) + '일 초과';
+    daysTag = `<span style="font-size:11px;margin-left:4px;color:${tagColor}">(${tagText})</span>`;
+  }
 
   const createdStr = new Date(t.created_at).toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit' });
 
