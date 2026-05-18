@@ -263,11 +263,9 @@ $('#form-owner-signup')?.addEventListener('submit', async (e) => {
         p_business_name: businessName,
         p_business_type: industryType,
         p_owner_name: ownerName,
+        p_industry_type: industryType,   // 0009 migration: industry_type 직접 저장
       });
       if (error && error.message !== 'ALREADY_BOOTSTRAPPED') throw error;
-      // industry_type 별도 업데이트 (bootstrap_owner가 business_type만 저장하므로)
-      await supabase.from('tenants').update({ industry_type: industryType })
-        .eq('id', (await supabase.auth.getUser()).data.user?.id);
       await supabase.auth.refreshSession();
       toast('가입 완료! 30일 무료체험이 시작됩니다.', 'success');
       location.href = 'dashboard.html';

@@ -13,7 +13,7 @@ export async function getMyProfile() {
   // 먼저 profiles + tenants 조인 시도
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, tenant_id, role, store_id, name, phone, email, hourly_wage, position, active, tenants(name, business_type, plan, subscription_status, trial_ends_at)')
+    .select('id, tenant_id, role, store_id, name, phone, email, hourly_wage, position, active, tenants(name, business_type, industry_type, plan, subscription_status, trial_ends_at)')
     .eq('id', user.id)
     .maybeSingle();
 
@@ -84,9 +84,10 @@ export async function signUpOwner({ email, password, businessName, businessType,
     return { needsEmailConfirm: true };
   }
   const { error: rpcErr } = await supabase.rpc('bootstrap_owner', {
-    p_business_name: businessName,
-    p_business_type: businessType,
-    p_owner_name: ownerName,
+    p_business_name:  businessName,
+    p_business_type:  businessType,
+    p_owner_name:     ownerName,
+    p_industry_type:  businessType,   // 0009 migration: industry_type 직접 저장
   });
   if (rpcErr && rpcErr.message !== 'ALREADY_BOOTSTRAPPED') throw rpcErr;
   await supabase.auth.refreshSession();
