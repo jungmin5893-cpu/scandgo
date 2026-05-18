@@ -11,6 +11,7 @@ import { renderShifts } from './views/shifts.js';
 import { renderPayroll } from './views/payroll.js';
 import { renderSettings } from './views/settings.js';
 import { renderSuperAdmin } from './views/superadmin.js';
+import { renderLeaves } from './views/leaves.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -28,6 +29,7 @@ const ROUTES = {
   payroll: renderPayroll,
   settings: renderSettings,
   superadmin: renderSuperAdmin,
+  leaves: renderLeaves,
 };
 
 init();

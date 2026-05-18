@@ -109,6 +109,33 @@ body{font-family:'Inter','Malgun Gothic','Apple SD Gothic Neo',sans-serif;backgr
 .profile-row span:first-child{color:var(--gray3);}
 .profile-row span:last-child{font-weight:700;}
 .logout-btn{width:calc(100% - 32px);margin:0 16px 24px;padding:14px;background:#fff;border:1.5px solid var(--gray2);border-radius:10px;color:var(--red);font-size:15px;font-weight:700;cursor:pointer;}
+
+/* 연차/휴가 */
+.leave-btn-wrap{padding:16px 16px 8px;}
+.leave-apply-btn{width:100%;background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;border:none;border-radius:12px;padding:16px;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(99,102,241,.3);}
+.leave-item{padding:14px 16px;border-bottom:1px solid var(--gray2);display:flex;align-items:center;gap:12px;}
+.leave-item:last-child{border-bottom:none;}
+.leave-info{flex:1;min-width:0;}
+.leave-info .l-type{font-size:14px;font-weight:700;}
+.leave-info .l-date{font-size:12px;color:var(--gray3);margin-top:2px;}
+.leave-info .l-reason{font-size:12px;color:var(--gray3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.leave-badge{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;flex-shrink:0;}
+.leave-badge.pending{background:#fef3c7;color:#d97706;}
+.leave-badge.approved{background:#d1fae5;color:#059669;}
+.leave-badge.rejected{background:#fee2e2;color:#dc2626;}
+
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;align-items:flex-end;justify-content:center;}
+.modal-overlay.active{display:flex;}
+.modal-sheet{background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;max-width:430px;}
+.modal-sheet h3{font-size:17px;font-weight:800;margin-bottom:20px;}
+.form-group{margin-bottom:16px;}
+.form-group label{display:block;font-size:12px;font-weight:700;color:var(--gray3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;}
+.form-group select,.form-group input,.form-group textarea{width:100%;padding:11px 14px;border:1.5px solid var(--gray2);border-radius:8px;font-size:14px;font-family:inherit;background:#fff;}
+.form-group textarea{resize:none;height:72px;}
+.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px;}
+.modal-actions button{padding:13px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;border:none;}
+.btn-cancel-modal{background:var(--gray1);color:var(--gray4);}
+.btn-submit-modal{background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;}
 </style>
 </head>
 <body>
@@ -199,12 +226,59 @@ body{font-family:'Inter','Malgun Gothic','Apple SD Gothic Neo',sans-serif;backgr
   <button class="tab-item" data-tab="history">
     <div class="t-icon">📅</div><div>내역</div>
   </button>
+  <button class="tab-item" data-tab="leave">
+    <div class="t-icon">🏖️</div><div>휴가</div>
+  </button>
   <button class="tab-item" data-tab="salary">
     <div class="t-icon">💰</div><div>급여</div>
   </button>
   <button class="tab-item" data-tab="profile">
     <div class="t-icon">👤</div><div>프로필</div>
   </button>
+</div>
+
+<!-- 연차/휴가 페이지 -->
+<div class="page-view" id="page-leave">
+  <div class="leave-btn-wrap">
+    <button class="leave-apply-btn" id="leave-apply-btn">🏖️ 휴가 신청하기</button>
+  </div>
+  <div class="section">
+    <div class="section-header">신청 내역</div>
+    <div id="leave-list"><div class="record-item" style="color:#8a94a6;justify-content:center;font-size:13px;">불러오는 중…</div></div>
+  </div>
+</div>
+
+<!-- 휴가 신청 모달 -->
+<div class="modal-overlay" id="leave-modal">
+  <div class="modal-sheet">
+    <h3>휴가 신청</h3>
+    <div class="form-group">
+      <label>휴가 종류</label>
+      <select id="leave-type">
+        <option value="연차">연차</option>
+        <option value="반차(오전)">반차 (오전)</option>
+        <option value="반차(오후)">반차 (오후)</option>
+        <option value="병가">병가</option>
+        <option value="기타">기타</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>시작일</label>
+      <input type="date" id="leave-start">
+    </div>
+    <div class="form-group">
+      <label>종료일</label>
+      <input type="date" id="leave-end">
+    </div>
+    <div class="form-group">
+      <label>사유 (선택)</label>
+      <textarea id="leave-reason" placeholder="휴가 사유를 입력하세요"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel-modal" id="leave-modal-cancel">취소</button>
+      <button class="btn-submit-modal" id="leave-modal-submit">신청하기</button>
+    </div>
+  </div>
 </div>
 
 <!-- 스캔 화면 -->

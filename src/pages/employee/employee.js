@@ -61,7 +61,20 @@ function bindUI() {
       $$('.page-view').forEach(p => p.classList.toggle('active', p.id === `page-${tab}`));
       if (tab === 'history') loadHistory();
       if (tab === 'salary') loadSalary();
+      if (tab === 'leave') loadLeave();
     });
+  });
+
+  // 휴가 신청 모달
+  $('#leave-apply-btn').addEventListener('click', openLeaveModal);
+  $('#leave-modal-cancel').addEventListener('click', closeLeaveModal);
+  $('#leave-modal').addEventListener('click', e => { if (e.target === $('#leave-modal')) closeLeaveModal(); });
+  $('#leave-modal-submit').addEventListener('click', submitLeave);
+
+  // 종료일 자동 설정
+  $('#leave-start').addEventListener('change', () => {
+    const end = $('#leave-end');
+    if (!end.value || end.value < $('#leave-start').value) end.value = $('#leave-start').value;
   });
 
   // 로그아웃
@@ -388,6 +401,104 @@ async function loadHistory() {
     `;
     list.appendChild(div);
   }
+}
+
+// ---------- 연차·휴가 ----------
+function openLeaveModal() {
+  const today = new Date().toISOString().slice(0, 10);
+  $('#leave-start').value = today;
+  $('#leave-end').value = today;
+  $('#leave-reason').value = '';
+  $('#leave-type').value = '연차';
+  $('#leave-modal').classList.add('active');
+}
+
+function closeLeaveModal() {
+  $('#leave-modal').classList.remove('active');
+}
+
+async function submitLeave() {
+  const btn = $('#leave-modal-submit');
+  const leaveType = $('#leave-type').value;
+  const startDate = $('#leave-start').value;
+  const endDate   = $('#leave-end').value;
+  const reason    = $('#leave-reason').value.trim();
+
+  if (!startDate || !endDate) { toast('날짜를 입력해주세요', 'error'); return; }
+  if (endDate < startDate)    { toast('종료일이 시작일보다 빠릅니다', 'error'); return; }
+
+  const isHalf = leaveType.startsWith('반차');
+  const ms = new Date(endDate) - new Date(startDate);
+  const days = isHalf ? 0.5 : Math.round(ms / 86400000) + 1;
+
+  btn.disabled = true;
+  btn.textContent = '신청 중…';
+
+  const { error } = await supabase.from('leave_requests').insert({
+    tenant_id:   profile.tenant_id,
+    employee_id: profile.id,
+    leave_type:  leaveType,
+    start_date:  startDate,
+    end_date:    endDate,
+    days,
+    reason: reason || null,
+  });
+
+  btn.disabled = false;
+  btn.textContent = '신청하기';
+
+  if (error) { toast(error.message, 'error'); return; }
+  toast('휴가 신청이 완료됐습니다', 'success');
+  closeLeaveModal();
+  await loadLeave();
+}
+
+async function loadLeave() {
+  const list = $('#leave-list');
+  if (!list) return;
+  list.innerHTML = '<div class="record-item" style="color:#8a94a6;justify-content:center;font-size:13px;">불러오는 중…</div>';
+
+  const { data, error } = await supabase
+    .from('leave_requests')
+    .select('*')
+    .eq('employee_id', profile.id)
+    .order('created_at', { ascending: false })
+    .limit(30);
+
+  if (error) { list.innerHTML = `<div class="record-item" style="color:#f04438;font-size:13px;">${error.message}</div>`; return; }
+  if (!data?.length) {
+    list.innerHTML = '<div class="record-item" style="color:#8a94a6;justify-content:center;font-size:13px;">신청 내역이 없습니다</div>';
+    return;
+  }
+
+  const statusLabel = { pending: '검토중', approved: '승인', rejected: '반려' };
+  list.innerHTML = data.map(r => {
+    const dateStr = r.start_date === r.end_date ? r.start_date : `${r.start_date} ~ ${r.end_date}`;
+    const canDelete = r.status === 'pending';
+    return `
+      <div class="leave-item">
+        <div class="leave-info">
+          <div class="l-type">${r.leave_type} <span style="font-size:12px;color:#64748b;font-weight:500">(${r.days}일)</span></div>
+          <div class="l-date">${dateStr}</div>
+          ${r.reason ? `<div class="l-reason">${r.reason}</div>` : ''}
+          ${r.reject_reason ? `<div class="l-reason" style="color:#dc2626">반려 사유: ${r.reject_reason}</div>` : ''}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+          <span class="leave-badge ${r.status}">${statusLabel[r.status] || r.status}</span>
+          ${canDelete ? `<button data-del="${r.id}" style="font-size:11px;color:#94a3b8;background:none;border:none;cursor:pointer">취소</button>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+
+  list.querySelectorAll('[data-del]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('신청을 취소하시겠습니까?')) return;
+      const { error: de } = await supabase.from('leave_requests').delete().eq('id', btn.dataset.del);
+      if (de) { toast(de.message, 'error'); return; }
+      toast('신청이 취소됐습니다', 'success');
+      await loadLeave();
+    });
+  });
 }
 
 async function loadSalary() {

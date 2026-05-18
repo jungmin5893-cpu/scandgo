@@ -104,6 +104,7 @@ export const PAID_FEATURES = {
   stores: '현장 / QR',
   shifts: '시프트 관리',
   payroll: '급여 정산',
+  leaves: '연차·휴가 관리',
   settings: '설정',
 };
 
