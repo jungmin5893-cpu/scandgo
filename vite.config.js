@@ -14,6 +14,8 @@ export default defineConfig({
         login: resolve(__dirname, 'login.html'),
         owner: resolve(__dirname, 'dashboard.html'),
         employee: resolve(__dirname, 'employee.html'),
+        terms: resolve(__dirname, 'terms.html'),
+        privacy: resolve(__dirname, 'privacy.html'),
       },
     },
   },
