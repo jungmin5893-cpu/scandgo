@@ -153,24 +153,22 @@ async function calculate(root, profile) {
   }
 
   const period = start;
-  const upsertRows = [];
-  const tableHtml  = [];
+  const upsertRows   = [];
+  const tableHtml    = [];
+  const displayRows  = [];   // PDF 출력용 전체 데이터
 
   for (const e of byEmp.values()) {
     let basePay = 0, nightPay = 0, otPay = 0;
 
     if (e.wageType === 'monthly') {
-      // 월급: 고정 금액
       basePay  = e.wage;
       nightPay = 0;
       otPay    = 0;
     } else if (e.wageType === 'daily') {
-      // 일급: 근무일 × 일급
       basePay  = e.days.size * e.wage;
       nightPay = 0;
       otPay    = 0;
     } else {
-      // 시급: 시간 기반 + 야간 + 연장
       const regularMin = e.totalMin - e.otMin;
       basePay  = Math.round((regularMin / 60) * e.wage);
       nightPay = Math.round((e.nightMin / 60) * e.wage * NIGHT_EXTRA);
@@ -183,7 +181,7 @@ async function calculate(root, profile) {
     const net        = grossPay - deductions;
     const addPay     = nightPay + otPay;
 
-    upsertRows.push({
+    const row = {
       tenant_id: profile.tenant_id, employee_id: e.id, period,
       total_minutes: e.totalMin,
       regular_minutes: e.wageType === 'hourly' ? e.totalMin - e.otMin : e.totalMin,
@@ -191,7 +189,20 @@ async function calculate(root, profile) {
       night_minutes: e.nightMin,
       base_pay: basePay, overtime_pay: otPay, night_pay: nightPay,
       deductions, net_pay: net, status: 'draft',
-    });
+    };
+    upsertRows.push(row);
+
+    // PDF용 표시 데이터
+    const disp = {
+      id: e.id, name: e.name,
+      wageType: e.wageType, wage: e.wage,
+      deductionType: e.deductionType,
+      daysWorked: e.days.size,
+      totalMin: e.totalMin, nightMin: e.nightMin, otMin: e.otMin,
+      basePay, nightPay, otPay,
+      holidayPay: e.holidayPay, grossPay, deductions, net,
+    };
+    displayRows.push(disp);
 
     tableHtml.push(`
       <tr class="pay-row" data-emp="${e.id}" data-name="${e.name}" title="클릭하면 ${e.name}님의 월간 근무표가 열립니다">
@@ -212,13 +223,18 @@ async function calculate(root, profile) {
           ? `-${deductions.toLocaleString()}원`
           : '<span class="muted">없음</span>'}</td>
         <td><strong>${net.toLocaleString()}원</strong></td>
-        <td><button class="btn small ghost" disabled title="PDF 명세서는 곧 추가됩니다" onclick="event.stopPropagation()">PDF</button></td>
+        <td>
+          <button class="btn small ghost btn-pdf" data-emp-id="${e.id}" onclick="event.stopPropagation()">
+            PDF
+          </button>
+        </td>
       </tr>
     `);
   }
 
   tbody.innerHTML = tableHtml.join('');
-  root._payRows = upsertRows;
+  root._payRows     = upsertRows;
+  root._displayRows = displayRows;
 
   // 직원 행 클릭 → 월간 근무표 모달
   tbody.querySelectorAll('.pay-row').forEach(tr => {
@@ -226,6 +242,14 @@ async function calculate(root, profile) {
       const empId = tr.dataset.emp;
       const empName = tr.dataset.name;
       openEmployeeCalendar({ empId, empName, monthStr: m, profile });
+    });
+  });
+
+  // PDF 버튼 클릭
+  tbody.querySelectorAll('.btn-pdf').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const disp = displayRows.find(d => d.id === btn.dataset.empId);
+      if (disp) printPayslip(disp, m, profile?.tenants?.name || '');
     });
   });
 
@@ -273,6 +297,131 @@ function exportExcel(root) {
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), '급여');
   XLSX.writeFile(wb, `TAGIN_급여_${rows[0].period.slice(0, 7)}.xlsx`);
   toast('엑셀 다운로드 완료', 'success');
+}
+
+// ============================================================
+// 🖨️ 급여명세서 프린트 (새 창 → 브라우저 PDF 저장)
+// ============================================================
+function printPayslip(d, monthStr, bizName) {
+  const [yy, mm] = monthStr.split('-');
+  const periodLabel = `${yy}년 ${Number(mm)}월`;
+  const wageLbl = WAGE_LABEL[d.wageType] || '시급';
+  const dedLbl  = DEDUCTION_LABEL[d.deductionType] || '-';
+
+  const row = (label, value, cls = '') =>
+    `<tr><td class="lbl">${label}</td><td class="val ${cls}">${value}</td></tr>`;
+
+  const html = `<!DOCTYPE html><html lang="ko"><head>
+<meta charset="UTF-8">
+<title>${d.name} 급여명세서 ${periodLabel}</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif;
+         background:#fff; color:#0f1b2d; padding:40px 48px; font-size:14px; }
+  .header { display:flex; justify-content:space-between; align-items:flex-start;
+            border-bottom:3px solid #0f1b2d; padding-bottom:16px; margin-bottom:24px; }
+  .header h1 { font-size:24px; font-weight:900; letter-spacing:1px; }
+  .header h1 span { color:#00c9a7; }
+  .header .meta { text-align:right; font-size:13px; color:#555; line-height:1.8; }
+  .emp-box { background:#f4f6f9; border-radius:8px; padding:14px 18px;
+             margin-bottom:22px; display:flex; gap:40px; }
+  .emp-box .field { display:flex; flex-direction:column; }
+  .emp-box .field .k { font-size:11px; color:#8a94a6; margin-bottom:2px; }
+  .emp-box .field .v { font-size:15px; font-weight:700; }
+  table { width:100%; border-collapse:collapse; margin-bottom:18px; }
+  table caption { font-size:13px; font-weight:700; color:#0f1b2d;
+                  text-align:left; padding:0 0 8px 2px; }
+  tr { border-bottom:1px solid #e9edf2; }
+  td { padding:9px 4px; }
+  td.lbl { color:#555; width:45%; }
+  td.val { font-weight:600; text-align:right; }
+  td.val.plus  { color:#00a88a; }
+  td.val.minus { color:#f04438; }
+  td.val.total { font-size:18px; font-weight:900; color:#0f1b2d; }
+  .section-title { font-size:12px; font-weight:800; color:#8a94a6;
+                   letter-spacing:.8px; text-transform:uppercase;
+                   margin:20px 0 8px; border-top:1px solid #e9edf2; padding-top:14px; }
+  .net-box { background:#0f1b2d; color:#fff; border-radius:10px;
+             padding:18px 22px; display:flex; justify-content:space-between;
+             align-items:center; margin-top:22px; }
+  .net-box .k { font-size:13px; opacity:.7; }
+  .net-box .v { font-size:26px; font-weight:900; color:#00c9a7; }
+  .footer { margin-top:32px; padding-top:16px; border-top:1px solid #e9edf2;
+            font-size:12px; color:#aaa; text-align:center; }
+  @media print {
+    body { padding:20px 28px; }
+    .no-print { display:none; }
+  }
+</style>
+</head><body>
+
+<div class="header">
+  <div>
+    <h1>TAG<span>IN</span></h1>
+    <div style="font-size:12px;color:#8a94a6;margin-top:4px">급여명세서 / Payslip</div>
+  </div>
+  <div class="meta">
+    <div><strong>${bizName || '사업장'}</strong></div>
+    <div>지급 기간: ${periodLabel}</div>
+    <div>발행일: ${new Date().toLocaleDateString('ko-KR')}</div>
+  </div>
+</div>
+
+<div class="emp-box">
+  <div class="field"><span class="k">직원명</span><span class="v">${d.name}</span></div>
+  <div class="field"><span class="k">급여 방식</span><span class="v">${wageLbl}</span></div>
+  <div class="field"><span class="k">공제 유형</span><span class="v">${dedLbl}</span></div>
+  <div class="field"><span class="k">근무일</span><span class="v">${d.daysWorked}일</span></div>
+  <div class="field"><span class="k">총 근무</span><span class="v">${minutesToHm(d.totalMin)}</span></div>
+</div>
+
+<div class="section-title">지급 내역</div>
+<table>
+  <caption>지급</caption>
+  <tbody>
+    ${row('기본급', `${d.basePay.toLocaleString()}원`)}
+    ${d.nightPay  > 0 ? row('야간수당 (22~06시 × 50%)', `+${d.nightPay.toLocaleString()}원`, 'plus') : ''}
+    ${d.otPay     > 0 ? row('연장수당 (일 8h 초과 × 150%)', `+${d.otPay.toLocaleString()}원`, 'plus') : ''}
+    ${d.holidayPay > 0 ? row('주휴수당', `+${d.holidayPay.toLocaleString()}원`, 'plus') : ''}
+    ${row('<strong>지급 합계 (세전)</strong>', `<strong>${d.grossPay.toLocaleString()}원</strong>`)}
+  </tbody>
+</table>
+
+<div class="section-title">공제 내역</div>
+<table>
+  <tbody>
+    ${row(`${dedLbl} 공제`, d.deductions > 0 ? `-${d.deductions.toLocaleString()}원` : '없음', d.deductions > 0 ? 'minus' : '')}
+  </tbody>
+</table>
+
+<div class="net-box">
+  <span class="k">실수령액 (세후)</span>
+  <span class="v">${d.net.toLocaleString()}원</span>
+</div>
+
+<div class="footer">
+  본 명세서는 TAGIN 시스템에서 자동 생성된 문서입니다.<br>
+  문의: support@tagin.kr
+</div>
+
+<div class="no-print" style="text-align:center;margin-top:28px">
+  <button onclick="window.print()" style="padding:12px 32px;background:#0f1b2d;color:#fff;
+    border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;margin-right:12px">
+    🖨️ 인쇄 / PDF 저장
+  </button>
+  <button onclick="window.close()" style="padding:12px 24px;background:#f4f6f9;color:#0f1b2d;
+    border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer">
+    닫기
+  </button>
+</div>
+
+</body></html>`;
+
+  const w = window.open('', '_blank', 'width=820,height=900');
+  if (!w) { toast('팝업이 차단됐습니다. 브라우저에서 팝업을 허용해주세요.', 'warn', 4000); return; }
+  w.document.write(html);
+  w.document.close();
+  w.focus();
 }
 
 // ============================================================
