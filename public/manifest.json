@@ -1,6 +1,6 @@
 {
-  "name": "TAGIN — 스마트 근태관리",
-  "short_name": "TAGIN",
+  "name": "SCAN&GO — 스마트 근태관리",
+  "short_name": "SCAN&GO",
   "description": "QR 출퇴근, 시프트 관리, 자동 급여계산",
   "lang": "ko-KR",
   "theme_color": "#00c9a7",

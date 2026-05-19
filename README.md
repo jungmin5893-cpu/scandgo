@@ -1,4 +1,4 @@
-# TAGIN — B2B 출퇴근 관리 SaaS (PWA)
+# SCAN&GO — B2B 출퇴근 관리 SaaS (PWA)
 
 QR 출퇴근, 직원별·요일별 시프트 기반 근무일 컷오프, 자동 급여계산, 멀티테넌트.
 무료 티어 100% (Supabase + Vercel/Netlify).

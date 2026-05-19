@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=430, initial-scale=1.0">
+<title>SCAN&GO 경쟁사 비교 리포트 2025</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  font-family:'Inter','Malgun Gothic','Apple SD Gothic Neo',sans-serif;
+  background:#060d16;
+  color:#fff;
+  width:430px;
+  margin:0 auto;
+}
+
+/* ── HEADER ── */
+.report-header{
+  background:linear-gradient(160deg,#0a1628 0%,#0f2942 60%,#0d3040 100%);
+  padding:32px 24px 28px;
+  border-bottom:1px solid rgba(184,147,90,.3);
+  position:relative;
+  overflow:hidden;
+}
+.report-header::before{
+  content:'';position:absolute;right:-40px;top:-40px;
+  width:200px;height:200px;
+  background:radial-gradient(circle,rgba(184,147,90,.12) 0%,transparent 70%);
+}
+.tag-badge{
+  display:inline-block;padding:4px 12px;
+  background:rgba(184,147,90,.2);border:1px solid rgba(184,147,90,.4);
+  border-radius:20px;font-size:11px;font-weight:700;color:#B8935A;
+  letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;
+}
+.report-header h1{font-size:26px;font-weight:900;line-height:1.2;margin-bottom:6px;}
+.report-header h1 span{color:#B8935A;}
+.report-header .subtitle{font-size:13px;color:rgba(255,255,255,.5);margin-bottom:20px;}
+.header-meta{display:flex;gap:20px;}
+.meta-item{text-align:center;}
+.meta-item .m-val{font-size:22px;font-weight:900;color:#00c9a7;}
+.meta-item .m-label{font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;letter-spacing:.5px;}
+
+/* ── SECTION ── */
+.section{padding:20px 20px 4px;}
+.section-title{
+  font-size:11px;font-weight:800;color:#B8935A;
+  letter-spacing:2px;text-transform:uppercase;
+  margin-bottom:14px;display:flex;align-items:center;gap:8px;
+}
+.section-title::after{
+  content:'';flex:1;height:1px;background:rgba(184,147,90,.2);
+}
+
+/* ── SCORE CARDS ── */
+.score-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 20px 20px;}
+.score-card{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  border-radius:12px;padding:14px 16px;
+}
+.score-card.scandgo{
+  background:linear-gradient(135deg,rgba(184,147,90,.15),rgba(0,201,167,.1));
+  border-color:rgba(184,147,90,.3);
+  grid-column:1/-1;
+}
+.sc-name{font-size:11px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:4px;}
+.sc-score{font-size:32px;font-weight:900;line-height:1;}
+.sc-score .unit{font-size:14px;font-weight:600;opacity:.6;}
+.sc-bar-wrap{margin-top:8px;background:rgba(255,255,255,.08);border-radius:4px;height:6px;overflow:hidden;}
+.sc-bar{height:100%;border-radius:4px;transition:width .3s;}
+.sc-sub{font-size:10px;color:rgba(255,255,255,.4);margin-top:4px;}
+
+/* SCAN&GO score card layout */
+.scandgo-score-row{display:flex;align-items:center;justify-content:space-between;}
+.scandgo-score-row .sc-score{font-size:48px;color:#B8935A;}
+.scandgo-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.scandgo-badge{
+  padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;
+  background:rgba(0,201,167,.15);border:1px solid rgba(0,201,167,.3);color:#00c9a7;
+}
+.scandgo-badge.gold{
+  background:rgba(184,147,90,.15);border-color:rgba(184,147,90,.3);color:#B8935A;
+}
+
+/* ── FEATURE TABLE ── */
+.feat-table-wrap{padding:0 20px 20px;}
+.feat-table{width:100%;border-collapse:separate;border-spacing:0;font-size:11px;}
+.feat-table th{
+  padding:8px 6px;text-align:center;font-size:10px;font-weight:700;
+  color:rgba(255,255,255,.4);letter-spacing:.5px;border-bottom:1px solid rgba(255,255,255,.08);
+}
+.feat-table th.app-head{
+  background:rgba(255,255,255,.03);border-radius:8px 8px 0 0;
+}
+.feat-table th.scandgo-head{
+  background:linear-gradient(135deg,rgba(184,147,90,.2),rgba(0,201,167,.1));
+  color:#B8935A;border:1px solid rgba(184,147,90,.2);border-bottom:none;border-radius:8px 8px 0 0;
+}
+.feat-table td{
+  padding:9px 6px;text-align:center;border-bottom:1px solid rgba(255,255,255,.04);
+}
+.feat-table td.feat-name{
+  text-align:left;font-weight:600;color:rgba(255,255,255,.75);
+  padding-left:2px;font-size:11px;
+}
+.feat-table td.scandgo-col{
+  background:rgba(184,147,90,.04);border-left:1px solid rgba(184,147,90,.1);border-right:1px solid rgba(184,147,90,.1);
+}
+.feat-table tr:last-child td.scandgo-col{
+  border-bottom:1px solid rgba(184,147,90,.1);border-radius:0 0 8px 8px;
+}
+.yes{color:#00c9a7;font-size:14px;}
+.no{color:rgba(255,255,255,.2);font-size:13px;}
+.partial{color:#f79009;font-size:13px;}
+.new-badge{
+  display:inline-block;padding:1px 5px;background:rgba(184,147,90,.25);
+  border-radius:4px;font-size:9px;font-weight:700;color:#B8935A;margin-left:3px;
+}
+.feat-group-header td{
+  padding:10px 6px 6px;font-size:9px;font-weight:800;letter-spacing:1px;
+  text-transform:uppercase;color:rgba(255,255,255,.25);
+  border-bottom:none !important;
+}
+
+/* ── PRICE COMPARE ── */
+.price-cards{padding:0 20px 20px;display:flex;flex-direction:column;gap:10px;}
+.price-card{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  border-radius:12px;padding:14px 16px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.price-card.scandgo-price{
+  background:linear-gradient(135deg,rgba(184,147,90,.12),rgba(0,201,167,.06));
+  border-color:rgba(184,147,90,.3);
+}
+.price-card .app-info{display:flex;align-items:center;gap:10px;}
+.price-card .app-dot{
+  width:8px;height:8px;border-radius:50%;flex-shrink:0;
+}
+.price-card .app-name{font-size:14px;font-weight:700;}
+.price-card .app-type{font-size:11px;color:rgba(255,255,255,.4);margin-top:1px;}
+.price-card .price-info{text-align:right;}
+.price-card .price-main{font-size:15px;font-weight:800;color:#fff;}
+.price-card .price-sub{font-size:10px;color:rgba(255,255,255,.35);margin-top:2px;}
+.price-card.scandgo-price .price-main{color:#00c9a7;}
+.price-card.scandgo-price .free-tag{
+  display:inline-block;padding:2px 8px;background:rgba(0,201,167,.2);
+  border-radius:10px;font-size:10px;font-weight:700;color:#00c9a7;margin-left:6px;
+}
+
+/* ── ADVANTAGE CARDS ── */
+.adv-grid{padding:0 20px 20px;display:flex;flex-direction:column;gap:10px;}
+.adv-card{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+  border-radius:12px;padding:14px 16px;
+  display:flex;gap:14px;align-items:flex-start;
+}
+.adv-icon{
+  width:40px;height:40px;border-radius:10px;display:flex;align-items:center;
+  justify-content:center;font-size:20px;flex-shrink:0;
+}
+.adv-icon.green{background:rgba(0,201,167,.15);}
+.adv-icon.gold{background:rgba(184,147,90,.15);}
+.adv-icon.blue{background:rgba(99,102,241,.15);}
+.adv-icon.red{background:rgba(239,68,68,.12);}
+.adv-title{font-size:13px;font-weight:800;margin-bottom:3px;}
+.adv-desc{font-size:11px;color:rgba(255,255,255,.5);line-height:1.5;}
+
+/* ── RADAR / SUMMARY ── */
+.verdict-card{
+  margin:0 20px 20px;
+  background:linear-gradient(135deg,#0f2942,#0d2035);
+  border:1px solid rgba(184,147,90,.25);
+  border-radius:16px;padding:20px;
+  text-align:center;
+}
+.verdict-card h3{font-size:14px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:16px;}
+.rank-list{display:flex;flex-direction:column;gap:8px;text-align:left;}
+.rank-item{display:flex;align-items:center;gap:10px;}
+.rank-num{
+  width:24px;height:24px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:11px;font-weight:900;flex-shrink:0;
+}
+.rank-1{background:linear-gradient(135deg,#B8935A,#d4a96a);color:#fff;}
+.rank-2{background:rgba(255,255,255,.12);color:rgba(255,255,255,.6);}
+.rank-3{background:rgba(255,255,255,.08);color:rgba(255,255,255,.4);}
+.rank-app{font-size:13px;font-weight:700;}
+.rank-reason{font-size:11px;color:rgba(255,255,255,.4);flex:1;text-align:right;}
+.rank-bar-wrap{width:100%;background:rgba(255,255,255,.06);border-radius:4px;height:5px;margin-top:4px;}
+.rank-bar{height:100%;border-radius:4px;}
+
+/* ── FOOTER ── */
+.report-footer{
+  padding:20px 24px;
+  border-top:1px solid rgba(255,255,255,.06);
+  text-align:center;
+}
+.report-footer .logo{font-size:18px;font-weight:900;letter-spacing:3px;color:#fff;}
+.report-footer .logo span{color:#B8935A;}
+.report-footer p{font-size:11px;color:rgba(255,255,255,.25);margin-top:6px;}
+
+/* ── DIVIDER ── */
+.divider{height:1px;background:linear-gradient(90deg,transparent,rgba(184,147,90,.15),transparent);margin:4px 20px 0;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="report-header">
+  <div class="tag-badge">Competitive Analysis 2025</div>
+  <h1>출퇴근관리 앱<br><span>비교 분석 리포트</span></h1>
+  <p class="subtitle">국내 주요 5개 서비스 · SCAN&GO 포함 기능·가격 종합 비교</p>
+  <div class="header-meta">
+    <div class="meta-item"><div class="m-val">5</div><div class="m-label">비교 앱</div></div>
+    <div class="meta-item"><div class="m-val">14</div><div class="m-label">비교 항목</div></div>
+    <div class="meta-item"><div class="m-val">4</div><div class="m-label">신규 기능</div></div>
+    <div class="meta-item"><div class="m-val">'25</div><div class="m-label">기준 연도</div></div>
+  </div>
+</div>
+
+<!-- OVERALL SCORE -->
+<div class="section">
+  <div class="section-title">종합 점수</div>
+</div>
+<div class="score-grid">
+
+  <div class="score-card scandgo">
+    <div class="scandgo-score-row">
+      <div>
+        <div class="sc-name">🏆 SCAN&GO (내 앱)</div>
+        <div class="sc-score">92<span class="unit">/100</span></div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:6px">기능 완성도</div>
+        <div style="font-size:11px;color:#00c9a7;font-weight:700">▲ 전 분기 대비 +31점</div>
+      </div>
+    </div>
+    <div class="sc-bar-wrap" style="margin-top:10px">
+      <div class="sc-bar" style="width:92%;background:linear-gradient(90deg,#B8935A,#00c9a7)"></div>
+    </div>
+    <div class="scandgo-badges">
+      <span class="scandgo-badge gold">전자근로계약서 NEW</span>
+      <span class="scandgo-badge gold">주52시간 모니터링 NEW</span>
+      <span class="scandgo-badge">영구 무료 플랜</span>
+      <span class="scandgo-badge gold">서브 관리자 NEW</span>
+    </div>
+  </div>
+
+  <div class="score-card">
+    <div class="sc-name">시프티</div>
+    <div class="sc-score" style="color:#a78bfa">88<span class="unit">/100</span></div>
+    <div class="sc-bar-wrap"><div class="sc-bar" style="width:88%;background:#a78bfa"></div></div>
+    <div class="sc-sub">업계 1위 · 가격 高</div>
+  </div>
+
+  <div class="score-card">
+    <div class="sc-name">뉴플로이 (알밤)</div>
+    <div class="sc-score" style="color:#60a5fa">76<span class="unit">/100</span></div>
+    <div class="sc-bar-wrap"><div class="sc-bar" style="width:76%;background:#60a5fa"></div></div>
+    <div class="sc-sub">15만 사업장 · 비콘 의존</div>
+  </div>
+
+  <div class="score-card">
+    <div class="sc-name">샤플</div>
+    <div class="sc-score" style="color:#34d399">72<span class="unit">/100</span></div>
+    <div class="sc-bar-wrap"><div class="sc-bar" style="width:72%;background:#34d399"></div></div>
+    <div class="sc-sub">HR 특화 · 중소 타깃</div>
+  </div>
+
+  <div class="score-card">
+    <div class="sc-name">근무킹</div>
+    <div class="sc-score" style="color:#94a3b8">41<span class="unit">/100</span></div>
+    <div class="sc-bar-wrap"><div class="sc-bar" style="width:41%;background:#94a3b8"></div></div>
+    <div class="sc-sub">무료·광고 · 기능 단순</div>
+  </div>
+
+</div>
+
+<div class="divider"></div>
+
+<!-- FEATURE TABLE -->
+<div class="section">
+  <div class="section-title">기능 비교표</div>
+</div>
+<div class="feat-table-wrap">
+<table class="feat-table">
+  <thead>
+    <tr>
+      <th style="text-align:left;width:30%">기능</th>
+      <th class="scandgo-head">SCAN&amp;GO</th>
+      <th class="app-head">시프티</th>
+      <th class="app-head">뉴플<br>로이</th>
+      <th class="app-head">샤플</th>
+      <th class="app-head">근무<br>킹</th>
+    </tr>
+  </thead>
+  <tbody>
+    <!-- 출퇴근 -->
+    <tr class="feat-group-header">
+      <td colspan="6">📍 출퇴근 인증</td>
+    </tr>
+    <tr>
+      <td class="feat-name">QR 코드</td>
+      <td class="scandgo-col"><span class="yes">✓</span></td>
+      <td><span class="yes">✓</span></td>
+      <td><span class="yes">✓</span></td>
+      <td><span class="yes">✓</span></td>
+      <td><span class="yes">✓</span></td>
+    </tr>
+    <tr>
+      <td class="feat-name">GPS 인증</td>
+      <td class="scandgo-col"><span class="yes">✓</span></td>
+      <td><span class="yes">✓</span></td>
+      <td><span class="partial">△</span></td>
+      <td><span class="yes">✓</span></td>
+      <td><span class="no">✕</span></td>
+    </tr>
+    <tr>
+      <td class="feat-name">푸시 알림</td>
+      <td class="scandgo-col"><span class="yes">✓</span></td>
+      <td><span class="yes">✓</span></td>
+      <td><span class="yes">✓</span></td>
+      <td><span class="yes">✓</span></td>
+      <td><span class="no">✕</span></td>
+    </tr>
+    <!-- 관리 -->
+    <tr class="feat-group-header">
+      <td colspan="6">⚙️ 인력·운영 관리</td>
+    </tr>
+    <tr>
+      <td class="feat-name">다현장 관리</td>
+      <td class="scandgo-col"><span class="yes">✓</span></td>
+      <td><span class="yes">✓</span></td>
+      <td><span class="yes">✓</span></td>
+      <td><span class="yes">✓</span></td>
+      <td><span class="no">✕</span></td>
+    </tr>
+    <tr>
+      <td class="feat-name">시프트 관리</td>
+      <td class="scandgo-col"><span class="yes">✓</span></td>
+      <td><span class="yes">✓</span></td>
+      <td><span class="yes">✓</span></td>
+      <td><span class="yes">✓</span></td>
+      <td><span class="partial">△</span></td>
+    </tr>
+    <tr>
+      <td class="feat-name">서브 관리자<span class="new-badge">NEW</span></td>
+      <td class="scandgo-col"><span class="yes">✓</span></td>
+      <td><span class="yes">✓</span></td>
+      <td><span class="partial">△</span></td>
+      <td><span class="yes">✓</span></td>
+      <td><span class="no">✕</span></td>
+    </tr>
+    <!-- 급여/법무 -->
+    <tr class="feat-group-header">
+      <td colspan="6">💰 급여·법무</td>
+    </tr>
+    <tr>
+      <td class="feat-name">급여 정산</td>
+      <td class="scandgo-col"><span class="yes">✓</span></td>
+      <td><span class="yes">✓</span></td>
+      <td><span class="yes">✓</span></td>
+      <td><span class="yes">✓</span></td>
+      <td><span class="partial">△</span></td>
+    </tr>
+    <tr>
+      <td class="feat-name">연차·휴가</td>
+      <td class="scandgo-col"><span class="yes">✓</span></td>
+      <td><span class="yes">✓</span></td>
+      <td><span class="yes">✓</span></td>
+      <td><span class="yes">✓</span></td>
+      <td><span class="no">✕</span></td>
+    </tr>
+    <tr>
+      <td class="feat-name">전자근로계약<span class="new-badge">NEW</span></td>
+      <td class="scandgo-col"><span class="yes">✓</span></td>
+      <td><span class="yes">✓</span></td>
+      <td><span class="no">✕</span></td>
+      <td><span class="no">✕</span></td>
+      <td><span class="no">✕</span></td>
+    </tr>
+    <!-- 컴플라이언스 -->
+    <tr class="feat-group-header">
+      <td colspan="6">📊 분석·컴플라이언스</td>
+    </tr>
+    <tr>
+      <td class="feat-name">주52시간 관리<span class="new-badge">NEW</span></td>
+      <td class="scandgo-col"><span class="yes">✓</span></td>
+      <td><span class="yes">✓</span></td>
+      <td><span class="yes">✓</span></td>
+      <td><span class="partial">△</span></td>
+      <td><span class="no">✕</span></td>
+    </tr>
+    <tr>
+      <td class="feat-name">근무 통계</td>
+      <td class="scandgo-col"><span class="yes">✓</span></td>
+      <td><span class="yes">✓</span></td>
+      <td><span class="yes">✓</span></td>
+      <td><span class="yes">✓</span></td>
+      <td><span class="no">✕</span></td>
+    </tr>
+    <tr>
+      <td class="feat-name">최저임금 경고</td>
+      <td class="scandgo-col"><span class="yes">✓</span></td>
+      <td><span class="partial">△</span></td>
+      <td><span class="partial">△</span></td>
+      <td><span class="partial">△</span></td>
+      <td><span class="no">✕</span></td>
+    </tr>
+    <!-- 가격 -->
+    <tr class="feat-group-header">
+      <td colspan="6">🆓 무료 플랜</td>
+    </tr>
+    <tr>
+      <td class="feat-name">영구 무료</td>
+      <td class="scandgo-col"><span class="yes">✓</span><br><span style="font-size:9px;color:#00c9a7">5인 이하</span></td>
+      <td><span class="no">✕</span></td>
+      <td><span class="no">✕</span></td>
+      <td><span class="no">✕</span></td>
+      <td><span class="yes">✓</span><br><span style="font-size:9px;color:#94a3b8">광고</span></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="divider"></div>
+
+<!-- PRICE COMPARE -->
+<div class="section">
+  <div class="section-title">요금 비교 (월 기준)</div>
+</div>
+<div class="price-cards">
+
+  <div class="price-card scandgo-price">
+    <div class="app-info">
+      <div class="app-dot" style="background:#B8935A"></div>
+      <div>
+        <div class="app-name">SCAN&GO <span style="font-size:11px;background:rgba(0,201,167,.2);color:#00c9a7;padding:2px 7px;border-radius:10px;font-weight:700">추천</span></div>
+        <div class="app-type">5인 이하 완전 무료</div>
+      </div>
+    </div>
+    <div class="price-info">
+      <div class="price-main">5,000원 <span style="font-size:10px;opacity:.6">/인</span></div>
+      <div class="price-sub">6인 이상 · 전 기능 포함</div>
+    </div>
+  </div>
+
+  <div class="price-card">
+    <div class="app-info">
+      <div class="app-dot" style="background:#a78bfa"></div>
+      <div>
+        <div class="app-name">시프티</div>
+        <div class="app-type">30일 무료 후 유료</div>
+      </div>
+    </div>
+    <div class="price-info">
+      <div class="price-main">~7,700원 <span style="font-size:10px;opacity:.6">/인</span></div>
+      <div class="price-sub">플랜별 상이</div>
+    </div>
+  </div>
+
+  <div class="price-card">
+    <div class="app-info">
+      <div class="app-dot" style="background:#60a5fa"></div>
+      <div>
+        <div class="app-name">뉴플로이 (알밤)</div>
+        <div class="app-type">1개월 무료 후 유료</div>
+      </div>
+    </div>
+    <div class="price-info">
+      <div class="price-main">9,900원~ <span style="font-size:10px;opacity:.6">/월</span></div>
+      <div class="price-sub">비콘 기기 포함</div>
+    </div>
+  </div>
+
+  <div class="price-card">
+    <div class="app-info">
+      <div class="app-dot" style="background:#34d399"></div>
+      <div>
+        <div class="app-name">샤플</div>
+        <div class="app-type">무료 체험 후 유료</div>
+      </div>
+    </div>
+    <div class="price-info">
+      <div class="price-main">5,500원 <span style="font-size:10px;opacity:.6">/인</span></div>
+      <div class="price-sub">기능 제한적</div>
+    </div>
+  </div>
+
+  <div class="price-card">
+    <div class="app-info">
+      <div class="app-dot" style="background:#94a3b8"></div>
+      <div>
+        <div class="app-name">근무킹</div>
+        <div class="app-type">광고 기반 무료</div>
+      </div>
+    </div>
+    <div class="price-info">
+      <div class="price-main" style="color:#94a3b8">무료</div>
+      <div class="price-sub">광고 포함 · 기능 제한</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="divider"></div>
+
+<!-- SCAN&GO ADVANTAGES -->
+<div class="section">
+  <div class="section-title">SCAN&GO 핵심 차별점</div>
+</div>
+<div class="adv-grid">
+
+  <div class="adv-card">
+    <div class="adv-icon gold">📄</div>
+    <div>
+      <div class="adv-title">전자근로계약서 <span style="font-size:10px;background:rgba(184,147,90,.2);color:#B8935A;padding:2px 6px;border-radius:8px">업계 최초 수준</span></div>
+      <div class="adv-desc">근로기준법 제17조 기준 전 항목 포함. 사장·직원 전자서명 후 즉시 법적 효력 발생. 주요 경쟁사 대부분 미지원.</div>
+    </div>
+  </div>
+
+  <div class="adv-card">
+    <div class="adv-icon green">⏱</div>
+    <div>
+      <div class="adv-title">주 52시간 실시간 모니터링</div>
+      <div class="adv-desc">2025년 30인 미만 사업장 계도기간 종료. 직원별 주간 근무시간 실시간 감지, 48h/52h 초과 시 경고 — 법 위반 리스크 사전 차단.</div>
+    </div>
+  </div>
+
+  <div class="adv-card">
+    <div class="adv-icon green">🆓</div>
+    <div>
+      <div class="adv-title">5인 이하 영구 무료</div>
+      <div class="adv-desc">트라이얼 아님. 5인 이하는 계약·급여·연차 포함 전 기능이 기간 제한 없이 무료. 소규모 사업장 완전 진입 장벽 제거.</div>
+    </div>
+  </div>
+
+  <div class="adv-card">
+    <div class="adv-icon blue">🏭</div>
+    <div>
+      <div class="adv-title">업종별 맞춤 레이블</div>
+      <div class="adv-desc">청소·시설, 건설, 경비, 인력사무소 등 업종별 UI 자동 변경. 경쟁사 대비 현장 밀착형 — "매장"이 아닌 "현장·파견처" 로 표시.</div>
+    </div>
+  </div>
+
+  <div class="adv-card">
+    <div class="adv-icon gold">💰</div>
+    <div>
+      <div class="adv-title">최저임금 경고 + 공제 자동 계산</div>
+      <div class="adv-desc">시급·일급·월급 입력 시 2025 최저임금(10,030원) 미만 즉시 경고. 4대보험 9.4% / 프리랜서 3.3% 자동 공제 계산.</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="divider"></div>
+
+<!-- VERDICT -->
+<div class="section">
+  <div class="section-title">종합 순위</div>
+</div>
+<div class="verdict-card">
+  <h3>기능 완성도 × 가성비 종합</h3>
+  <div class="rank-list">
+
+    <div>
+      <div class="rank-item">
+        <div class="rank-num rank-1">1</div>
+        <div>
+          <div class="rank-app">SCAN&GO <span style="font-size:10px;color:#B8935A">★ 추천</span></div>
+        </div>
+        <div class="rank-reason">전자계약·52h·무료플랜</div>
+      </div>
+      <div class="rank-bar-wrap">
+        <div class="rank-bar" style="width:92%;background:linear-gradient(90deg,#B8935A,#00c9a7)"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="rank-item">
+        <div class="rank-num rank-2">2</div>
+        <div><div class="rank-app">시프티</div></div>
+        <div class="rank-reason">기능 최다 · 가격 높음</div>
+      </div>
+      <div class="rank-bar-wrap">
+        <div class="rank-bar" style="width:88%;background:#a78bfa"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="rank-item">
+        <div class="rank-num rank-3">3</div>
+        <div><div class="rank-app">뉴플로이</div></div>
+        <div class="rank-reason">점유율 높음 · 비콘 의존</div>
+      </div>
+      <div class="rank-bar-wrap">
+        <div class="rank-bar" style="width:76%;background:#60a5fa"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="rank-item">
+        <div class="rank-num rank-3">4</div>
+        <div><div class="rank-app">샤플</div></div>
+        <div class="rank-reason">HR 특화 · 계약서 없음</div>
+      </div>
+      <div class="rank-bar-wrap">
+        <div class="rank-bar" style="width:72%;background:#34d399"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="rank-item">
+        <div class="rank-num rank-3">5</div>
+        <div><div class="rank-app">근무킹</div></div>
+        <div class="rank-reason">무료 · 기능 매우 제한적</div>
+      </div>
+      <div class="rank-bar-wrap">
+        <div class="rank-bar" style="width:41%;background:#94a3b8"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="margin-top:16px;padding:12px 14px;background:rgba(0,201,167,.08);border:1px solid rgba(0,201,167,.15);border-radius:10px;font-size:12px;color:rgba(255,255,255,.7);line-height:1.7;text-align:left">
+    💡 <strong style="color:#00c9a7">결론:</strong> 전자근로계약서·주52시간 모니터링 추가로 SCAN&GO은 시프티 수준의 기능을 <strong style="color:#00c9a7">절반 이하 가격</strong>에 제공합니다. 특히 청소·건설·경비 업종의 5~30인 사업장에서 압도적 가성비를 보입니다.
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="report-footer">
+  <div class="logo">TAG<span>IN</span></div>
+  <p>2025년 5월 기준 · 자체 조사 · 가격은 변동 가능</p>
+</div>
+
+</body>
+</html>

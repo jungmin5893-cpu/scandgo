@@ -5,7 +5,7 @@ import { resolve } from 'path';
 export default defineConfig({
   root: '.',
   publicDir: 'public',
-  base: '/tapin2/',
+  base: '/scandgo/',
   build: {
     outDir: 'dist',
     rollupOptions: {
@@ -31,8 +31,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icons/*.png'],
       manifest: {
-        name: 'TAGIN — 스마트 근태관리',
-        short_name: 'TAGIN',
+        name: 'SCAN&GO — 스마트 근태관리',
+        short_name: 'SCAN&GO',
         description: 'QR 출퇴근, 시프트 관리, 자동 급여계산',
         theme_color: '#00c9a7',
         background_color: '#0f1b2d',

@@ -253,14 +253,14 @@ async function onScan(result) {
 }
 
 async function manualEntry() {
-  const v = prompt('QR 내용을 직접 입력 (예: tagin://checkin?store=...&s=...)');
+  const v = prompt('QR 내용을 직접 입력 (예: scandgo://checkin?store=...&s=...)');
   if (v) await handleQrPayload(v);
 }
 
 function parseQr(raw) {
-  // tagin://checkin?store=<uuid>&s=<secret>
+  // scandgo://checkin?store=<uuid>&s=<secret>
   try {
-    const u = new URL(raw.replace(/^tagin:\/\//, 'https://tagin.local/'));
+    const u = new URL(raw.replace(/^scandgo:\/\//, 'https://scandgo.local/'));
     const store = u.searchParams.get('store');
     const s = u.searchParams.get('s');
     if (store && s) return { store, s };

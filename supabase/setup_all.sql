@@ -1,5 +1,5 @@
 -- ============================================================
--- TAGIN — 완전 초기화 + 셋업 (한 번에 실행)
+-- SCAN&GO — 완전 초기화 + 셋업 (한 번에 실행)
 -- 기존 테이블이 있어도 모두 지우고 새로 만듭니다
 -- Supabase SQL Editor에 전체 복사 후 RUN 클릭
 -- ============================================================
@@ -578,4 +578,4 @@ alter publication supabase_realtime add table attendances;
 alter publication supabase_realtime add table requests;
 
 -- 완료! -------------------------------------------------------
-select 'TAGIN 셋업 완료 ✓' as result;
+select 'SCAN&GO 셋업 완료 ✓' as result;

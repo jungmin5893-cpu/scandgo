@@ -337,7 +337,7 @@ function exportExcel(root) {
   const monthStr = root.querySelector('#pay-month')?.value || nowKst().format('YYYY-MM');
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, `${monthStr} 급여정산`);
-  XLSX.writeFile(wb, `TAGIN_급여정산_${monthStr}.xlsx`);
+  XLSX.writeFile(wb, `SCANDGO_급여정산_${monthStr}.xlsx`);
   toast('엑셀 다운로드 완료', 'success');
 }
 
@@ -399,7 +399,7 @@ function printPayslip(d, monthStr, bizName) {
 
 <div class="header">
   <div>
-    <h1>TAG<span>IN</span></h1>
+    <h1>SCAN<span>&amp;GO</span></h1>
     <div style="font-size:12px;color:#8a94a6;margin-top:4px">급여명세서 / Payslip</div>
   </div>
   <div class="meta">
@@ -442,8 +442,8 @@ function printPayslip(d, monthStr, bizName) {
 </div>
 
 <div class="footer">
-  본 명세서는 TAGIN 시스템에서 자동 생성된 문서입니다.<br>
-  문의: support@tagin.kr
+  본 명세서는 SCAN&amp;GO 시스템에서 자동 생성된 문서입니다.<br>
+  문의: support@scandgo.com
 </div>
 
 <div class="no-print" style="text-align:center;margin-top:28px">

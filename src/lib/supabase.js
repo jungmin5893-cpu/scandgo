@@ -20,7 +20,7 @@ export const supabase = createClient(url || 'https://placeholder.supabase.co', a
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    storageKey: 'tagin.auth',
+    storageKey: 'scandgo.auth',
   },
   realtime: { params: { eventsPerSecond: 5 } },
 });

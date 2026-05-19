@@ -121,6 +121,6 @@ function exportExcel(root, labels = { site: '현장' }) {
   ws['!cols'] = [{ wch: 12 }, { wch: 10 }, { wch: 14 }, { wch: 10 }, { wch: 18 }, { wch: 18 }, { wch: 12 }, { wch: 20 }];
   XLSX.utils.book_append_sheet(wb, ws, '근태');
   const month = root.querySelector('#att-month').value;
-  XLSX.writeFile(wb, `TAGIN_근태_${month}.xlsx`);
+  XLSX.writeFile(wb, `SCANDGO_근태_${month}.xlsx`);
   toast('엑셀 다운로드 완료', 'success');
 }

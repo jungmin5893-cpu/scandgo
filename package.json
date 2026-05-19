@@ -1,9 +1,9 @@
 {
-  "name": "tapin2",
+  "name": "scandgo",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "TAGIN — B2B 출퇴근 관리 SaaS (PWA)",
+  "description": "SCAN&GO — B2B 출퇴근 관리 SaaS (PWA)",
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",

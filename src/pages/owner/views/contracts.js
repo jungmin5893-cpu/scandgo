@@ -740,7 +740,7 @@ function signatureBlock(c, profile, ownerTitle='사용자 서명', empTitle='근
       <div style="font-size:12px;color:#64748b">서명일: ${c.employee_signed_at ? new Date(c.employee_signed_at).toLocaleDateString('ko-KR') : '미서명'}</div>
     </div>
   </div>
-  <p style="font-size:11px;color:#94a3b8;text-align:center;margin-top:20px">작성일: ${c.created_at?.slice(0,10)} · TAGIN 전자계약서</p>`;
+  <p style="font-size:11px;color:#94a3b8;text-align:center;margin-top:20px">작성일: ${c.created_at?.slice(0,10)} · SCAN&amp;GO 전자계약서</p>`;
 }
 
 // ── row2 헬퍼 ─────────────────────────────────────────────────────────────────

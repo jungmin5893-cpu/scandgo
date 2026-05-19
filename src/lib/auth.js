@@ -105,7 +105,7 @@ export async function signInOwner({ email, password }) {
 // 직원 가입
 export async function signUpEmployee({ phone, code, name, password }) {
   const cleanPhone = phone.replace(/[^0-9]/g, '');
-  const email = `emp_${cleanPhone}@tagin.local`;
+  const email = `emp_${cleanPhone}@scandgo.local`;
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -125,7 +125,7 @@ export async function signUpEmployee({ phone, code, name, password }) {
 
 export async function signInEmployee({ phone, password }) {
   const cleanPhone = phone.replace(/[^0-9]/g, '');
-  const email = `emp_${cleanPhone}@tagin.local`;
+  const email = `emp_${cleanPhone}@scandgo.local`;
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
   return data;

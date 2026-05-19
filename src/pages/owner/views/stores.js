@@ -175,7 +175,7 @@ async function loadStores(root, profile, siteLbl, wLbl) {
           <div style="font-size:12px;color:#8a94a6"><b>위치:</b> ${s.gps_lat ? `${s.gps_lat.toFixed(4)}, ${s.gps_lng.toFixed(4)}` : '미설정'}</div>
           <div style="font-size:12px;color:#8a94a6;margin-top:4px"><b>반경:</b> ${s.gps_radius_m}m</div>
           <div style="font-size:11px;color:#64748b;margin-top:6px;word-break:break-all">
-            <code style="font-size:10px">tagin://checkin?store=${s.id}&s=${s.qr_secret.slice(0,8)}…</code>
+            <code style="font-size:10px">scandgo://checkin?store=${s.id}&s=${s.qr_secret.slice(0,8)}…</code>
           </div>
           <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
             <button class="btn small ghost" data-regen="${s.id}">QR 재발급</button>
@@ -190,7 +190,7 @@ async function loadStores(root, profile, siteLbl, wLbl) {
   `).join('');
 
   for (const s of data) {
-    renderQr(root, s.id, `tagin://checkin?store=${s.id}&s=${s.qr_secret}`);
+    renderQr(root, s.id, `scandgo://checkin?store=${s.id}&s=${s.qr_secret}`);
     loadBadge(root, s.id, profile, wLbl);
   }
 
@@ -507,7 +507,7 @@ function downloadQr(root, sid, storeName) {
   if (!canvas) return;
   const safeName = (storeName || sid.slice(0,8)).replace(/[^\w가-힣]/g, '_');
   const a = document.createElement('a');
-  a.download = `TAGIN_QR_${safeName}.png`;
+  a.download = `SCANDGO_QR_${safeName}.png`;
   a.href = canvas.toDataURL('image/png'); a.click();
 }
 
@@ -541,7 +541,7 @@ function printQr(root, sid, storeName) {
 </head>
 <body>
   <div class="page">
-    <div class="brand">TAGIN 출퇴근 시스템</div>
+    <div class="brand">SCAN&amp;GO 출퇴근 시스템</div>
     <div class="store-name">${storeName}</div>
     <div class="qr-wrap">
       <img src="${dataUrl}" alt="QR 코드">

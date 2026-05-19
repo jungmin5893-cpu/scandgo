@@ -36,7 +36,7 @@ self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
 
 // ── Web Push 수신 ─────────────────────────────────────────
 self.addEventListener('push', (event) => {
-  let data = { title: 'TAGIN', body: '새 알림이 있습니다.' };
+  let data = { title: 'SCAN&GO', body: '새 알림이 있습니다.' };
   try {
     data = event.data?.json() ?? data;
   } catch {
@@ -49,7 +49,7 @@ self.addEventListener('push', (event) => {
     badge: '/icons/icon-192.png',
     vibrate: [200, 100, 200],
     data: { url: data.url || '/dashboard.html' },
-    tag: data.tag || 'tagin-push',
+    tag: data.tag || 'scandgo-push',
     renotify: true,
   };
 

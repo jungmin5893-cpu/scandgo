@@ -40,8 +40,8 @@ serve(async (req) => {
       body: JSON.stringify({
         customerKey,
         amount,
-        orderId: `tagin-${tenant_id}-${Date.now()}`,
-        orderName: `TAGIN ${plan || 'standard'} 월 구독`,
+        orderId: `scandgo-${tenant_id}-${Date.now()}`,
+        orderName: `SCAN&GO ${plan || 'standard'} 월 구독`,
       }),
     });
     const payJson = await payRes.json();
