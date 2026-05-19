@@ -163,29 +163,30 @@ async function loadStores(root, profile, siteLbl, wLbl) {
         <span class="store-chevron" id="chev-${s.id}">▼</span>
       </div>
 
-      <div class="store-qr-wrap">
-        <div class="qr-block">
-          <div id="qr-${s.id}" class="qr-canvas"></div>
-          <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
-            <button class="btn small" data-download="${s.id}" data-name="${s.name}">⬇ QR 저장</button>
-            <button class="btn small" data-print="${s.id}" data-name="${s.name}">🖨 프린트</button>
+      <div class="store-detail" id="detail-${s.id}" style="display:none">
+        <div class="store-qr-wrap">
+          <div class="qr-block">
+            <div id="qr-${s.id}" class="qr-canvas"></div>
+            <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+              <button class="btn small" data-download="${s.id}" data-name="${s.name}">⬇ QR 저장</button>
+              <button class="btn small" data-print="${s.id}" data-name="${s.name}">🖨 프린트</button>
+            </div>
+          </div>
+          <div class="store-info">
+            <div style="font-size:12px;color:#8a94a6"><b>위치:</b> ${s.gps_lat ? `${s.gps_lat.toFixed(4)}, ${s.gps_lng.toFixed(4)}` : '미설정'}</div>
+            <div style="font-size:12px;color:#8a94a6;margin-top:4px"><b>반경:</b> ${s.gps_radius_m}m</div>
+            <div style="font-size:11px;color:#64748b;margin-top:6px;word-break:break-all">
+              <code style="font-size:10px">scandgo://checkin?store=${s.id}&s=${s.qr_secret.slice(0,8)}…</code>
+            </div>
+            <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+              <button class="btn small ghost" data-regen="${s.id}">QR 재발급</button>
+              <button class="btn small danger" data-del="${s.id}">삭제</button>
+            </div>
           </div>
         </div>
-        <div class="store-info">
-          <div style="font-size:12px;color:#8a94a6"><b>위치:</b> ${s.gps_lat ? `${s.gps_lat.toFixed(4)}, ${s.gps_lng.toFixed(4)}` : '미설정'}</div>
-          <div style="font-size:12px;color:#8a94a6;margin-top:4px"><b>반경:</b> ${s.gps_radius_m}m</div>
-          <div style="font-size:11px;color:#64748b;margin-top:6px;word-break:break-all">
-            <code style="font-size:10px">scandgo://checkin?store=${s.id}&s=${s.qr_secret.slice(0,8)}…</code>
-          </div>
-          <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
-            <button class="btn small ghost" data-regen="${s.id}">QR 재발급</button>
-            <button class="btn small danger" data-del="${s.id}">삭제</button>
-          </div>
-        </div>
+        <!-- 직원 섹션 -->
+        <div class="store-emp-panel" id="emp-${s.id}"></div>
       </div>
-
-      <!-- 직원 섹션 -->
-      <div class="store-emp-panel" id="emp-${s.id}" style="display:none"></div>
     </div>
   `).join('');
 
@@ -234,14 +235,15 @@ async function loadBadge(root, storeId, profile, wLbl) {
 // 직원 패널 토글
 // ─────────────────────────────────────────────────────────────
 async function togglePanel(root, storeId, profile, wLbl) {
-  const panel = root.querySelector(`#emp-${storeId}`);
-  const chev  = root.querySelector(`#chev-${storeId}`);
-  if (!panel) return;
+  const detail = root.querySelector(`#detail-${storeId}`);
+  const panel  = root.querySelector(`#emp-${storeId}`);
+  const chev   = root.querySelector(`#chev-${storeId}`);
+  if (!detail) return;
 
-  const open = panel.style.display !== 'none';
-  panel.style.display = open ? 'none' : 'block';
+  const open = detail.style.display !== 'none';
+  detail.style.display = open ? 'none' : 'block';
   if (chev) chev.textContent = open ? '▼' : '▲';
-  if (open || panel.dataset.loaded) return;
+  if (open || panel?.dataset.loaded) return;
 
   panel.innerHTML = '<div style="padding:12px 0;text-align:center;color:#8a94a6;font-size:13px">불러오는 중…</div>';
 
@@ -461,12 +463,13 @@ function injectStoreStyle() {
   s.textContent = `
     .store-toggle-head {
       display:flex;align-items:center;justify-content:space-between;
-      cursor:pointer;user-select:none;padding:2px 4px;border-radius:8px;
-      transition:background .15s;margin-bottom:12px;
+      cursor:pointer;user-select:none;padding:14px 18px;
+      transition:background .15s;
     }
     .store-toggle-head:hover { background:rgba(0,201,167,.06); }
-    .store-chevron { font-size:12px;color:#8a94a6;transition:transform .2s; }
+    .store-chevron { font-size:13px;color:#8a94a6;transition:transform .2s; }
 
+    .store-detail { padding:0 18px 16px; }
     .store-qr-wrap { display:flex;gap:20px;flex-wrap:wrap; }
 
     .store-emp-panel {
