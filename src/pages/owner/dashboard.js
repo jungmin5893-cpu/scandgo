@@ -161,6 +161,7 @@ function showExpiredModal() {
       <h2 style="font-size:20px;font-weight:900;color:#0f1b2d;margin-bottom:8px">서비스 이용 기간이 만료됐습니다</h2>
       <p style="font-size:14px;color:#8a94a6;margin-bottom:24px;line-height:1.7">${msg}<br>계속 이용하시려면 구독을 시작해주세요.<br><span style="font-size:12px">직원들의 출퇴근 기록은 안전하게 보존되고 있습니다.</span></p>
       <button id="btn-go-billing" style="width:100%;padding:14px;background:linear-gradient(135deg,#00c9a7,#00b096);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px">구독 시작하기 →</button>
+      <button id="btn-expired-refresh" style="width:100%;padding:13px;background:#e8f5e9;color:#2e7d32;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px">🔄 연장/결제 완료했어요 — 새로고침</button>
       <button id="btn-expired-logout" style="width:100%;padding:12px;background:#f4f6f9;color:#8a94a6;border:none;border-radius:12px;font-size:13px;cursor:pointer">로그아웃</button>
     </div>`;
   document.body.appendChild(overlay);
@@ -170,6 +171,7 @@ function showExpiredModal() {
     bindNav();
     navigate('settings');
   });
+  document.getElementById('btn-expired-refresh').addEventListener('click', () => location.reload());
   document.getElementById('btn-expired-logout').addEventListener('click', signOut);
 }
 

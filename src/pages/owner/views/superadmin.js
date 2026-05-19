@@ -117,6 +117,11 @@ async function handleExtend(root, tenantId, currentEndDate) {
   if (error) { toast(error.message, 'error'); return; }
   toast('트라이얼 30일 연장 완료 ✓', 'success');
   await loadTenants(root);
+
+  // 내 계정 만료 오버레이가 떠있으면 자동 새로고침 (프로필 캐시 초기화)
+  if (document.getElementById('expired-overlay')) {
+    setTimeout(() => location.reload(), 1000);
+  }
 }
 
 async function handleExpire(root, tenantId) {
