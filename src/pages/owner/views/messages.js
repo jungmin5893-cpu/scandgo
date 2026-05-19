@@ -46,8 +46,18 @@ export async function renderMessages({ root, profile }) {
           <label style="font-size:12px;font-weight:700;color:#3d4a5c;display:block;margin-bottom:5px">
             발송 예약일 <span style="font-weight:400;color:#8a94a6">(선택 안 하면 즉시 발송)</span>
           </label>
-          <input id="msg-date" type="date"
-            style="width:100%;padding:10px 12px;border:1.5px solid #e2e7ef;border-radius:8px;font-size:14px;font-family:inherit">
+          <div style="display:flex;gap:8px">
+            <select id="msg-month"
+              style="flex:1;padding:10px 12px;border:1.5px solid #e2e7ef;border-radius:8px;font-size:14px;font-family:inherit">
+              <option value="">월</option>
+              ${[1,2,3,4,5,6,7,8,9,10,11,12].map(m=>`<option value="${String(m).padStart(2,'0')}">${m}월</option>`).join('')}
+            </select>
+            <select id="msg-day"
+              style="flex:1;padding:10px 12px;border:1.5px solid #e2e7ef;border-radius:8px;font-size:14px;font-family:inherit">
+              <option value="">일</option>
+              ${Array.from({length:31},(_,i)=>i+1).map(d=>`<option value="${String(d).padStart(2,'0')}">${d}일</option>`).join('')}
+            </select>
+          </div>
         </div>
         <button type="submit" class="btn"
           style="background:linear-gradient(135deg,#00c9a7,#00b096);color:#fff;border:none;padding:12px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer">
@@ -116,7 +126,15 @@ export async function renderMessages({ root, profile }) {
 
     const title = $('#msg-title', root).value.trim();
     const body  = $('#msg-body', root).value.trim();
-    const scheduledDate = $('#msg-date', root).value || null;
+    const month = $('#msg-month', root).value;
+    const day   = $('#msg-day', root).value;
+    let scheduledDate = null;
+    if (month && day) {
+      const now = new Date();
+      let year = now.getFullYear();
+      if (new Date(`${year}-${month}-${day}`) < now) year++;
+      scheduledDate = `${year}-${month}-${day}`;
+    }
     const targetId = $('#target-select', root).value;
 
     if (targetType !== 'all' && !targetId) {
