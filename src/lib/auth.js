@@ -14,7 +14,7 @@ export async function getMyProfile() {
   // 먼저 profiles + tenants 조인 시도
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, tenant_id, role, store_id, name, phone, email, hourly_wage, wage_type, deduction_type, position, active, is_super_admin, tenants(name, business_type, industry_type, plan, subscription_status, trial_ends_at, peak_employee_count)')
+    .select('id, tenant_id, role, store_id, name, phone, email, hourly_wage, wage_type, deduction_type, position, active, is_super_admin, tutorial_owner_done, tutorial_employee_done, tenants(name, business_type, industry_type, plan, subscription_status, trial_ends_at, peak_employee_count)')
     .eq('id', user.id)
     .maybeSingle();
 
@@ -23,7 +23,7 @@ export async function getMyProfile() {
     // 조인 실패 시 profiles만 조회
     const { data: d2, error: e2 } = await supabase
       .from('profiles')
-      .select('id, tenant_id, role, store_id, name, phone, email, hourly_wage, wage_type, deduction_type, position, active, is_super_admin')
+      .select('id, tenant_id, role, store_id, name, phone, email, hourly_wage, wage_type, deduction_type, position, active, is_super_admin, tutorial_owner_done, tutorial_employee_done')
       .eq('id', user.id)
       .maybeSingle();
     if (e2) {
@@ -44,6 +44,20 @@ export async function getClaims() {
 
 export function routeForRole(role) {
   return ROUTE[role] || ROUTE.none;
+}
+
+// 인증 후 이동할 페이지 결정 (튜토리얼 미완료 시 튜토리얼로)
+export function routeAfterAuth(profile) {
+  if (!profile?.role) return ROUTE.none;
+  if (profile.role === 'owner' || profile.role === 'manager') {
+    if (!profile.tutorial_owner_done) return 'tutorial-owner.html';
+    return ROUTE.owner;
+  }
+  if (profile.role === 'employee') {
+    if (!profile.tutorial_employee_done) return 'tutorial-employee.html';
+    return ROUTE.employee;
+  }
+  return ROUTE.none;
 }
 
 export async function requireRole(allowed) {

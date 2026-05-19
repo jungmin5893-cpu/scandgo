@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0f1b2d">
+<title>SCAN&GO — 직원 사용법 안내</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --green:#00c9a7;--green3:#e0faf6;--blue:#1565c0;
+  --gray1:#f4f6f9;--gray2:#e2e7ef;--gray3:#8a94a6;--gray4:#3d4a5c;
+  --dark:#0f1b2d;--white:#fff;--red:#f04438;--orange:#f79009;
+  --navy:#0f1b2d;--navy2:#1a2d45;
+  --shadow:0 2px 12px rgba(0,0,0,.10);
+}
+html{background:linear-gradient(145deg,#060d16 0%,#0f1b2d 55%,#0d2a3a 100%);}
+body{font-family:'Inter','Malgun Gothic','Apple SD Gothic Neo',sans-serif;background:var(--gray1);color:var(--dark);max-width:430px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;box-shadow:0 0 60px rgba(0,0,0,.4);position:relative;}
+
+.topbar{background:var(--navy);color:#fff;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;}
+.topbar .logo{font-size:18px;font-weight:900;letter-spacing:2px;color:#fff;}
+.topbar .logo span{color:var(--green);}
+.topbar .user-info{font-size:13px;opacity:.85;text-align:right;}
+.topbar .user-info strong{display:block;font-size:14px;opacity:1;}
+
+.tut-banner{background:linear-gradient(135deg,#B8935A,#a07840);color:#fff;padding:10px 18px;text-align:center;font-size:12px;font-weight:700;letter-spacing:1px;}
+.tut-banner span{opacity:.85;font-weight:600;margin-left:4px;}
+
+.status-card{background:linear-gradient(135deg,#0f1b2d,#1a2d45,#0d3040);color:#fff;margin:16px;border-radius:14px;padding:22px 20px;box-shadow:0 4px 18px rgba(0,0,0,.25);border:1px solid rgba(0,201,167,.2);transition:.35s;}
+.status-card.checkedout{background:linear-gradient(135deg,#1a2a3a,#243650);border-color:rgba(255,255,255,.1);}
+.status-card .store-name{font-size:13px;opacity:.8;margin-bottom:6px;}
+.status-card .cur-status{font-size:22px;font-weight:900;margin-bottom:6px;}
+.status-card .cur-time{font-size:32px;font-weight:900;letter-spacing:1px;font-variant-numeric:tabular-nums;}
+.status-card .work-time{font-size:13px;opacity:.8;margin-top:6px;min-height:18px;}
+.status-row{display:flex;justify-content:space-between;align-items:flex-end;margin-top:10px;}
+.status-badge{background:rgba(0,201,167,.2);color:var(--green);padding:5px 14px;border-radius:20px;font-size:13px;font-weight:700;}
+.status-badge.gray{background:rgba(255,255,255,.12);color:rgba(255,255,255,.7);}
+
+.qr-section{padding:0 16px 16px;}
+.qr-main-btn{width:100%;background:linear-gradient(135deg,#00c9a7,#00b096);color:#fff;border:none;border-radius:14px;padding:22px;font-size:20px;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;box-shadow:0 6px 20px rgba(0,201,167,.35);font-family:inherit;transition:.2s;}
+.qr-main-btn.checkout{background:linear-gradient(135deg,#1565c0,#1976d2);box-shadow:0 6px 20px rgba(21,101,192,.3);}
+.qr-main-btn .qr-icon{font-size:48px;}
+.qr-sub{font-size:13px;opacity:.85;font-weight:500;}
+
+.section{background:var(--white);margin:0 16px 16px;border-radius:12px;box-shadow:var(--shadow);overflow:hidden;}
+.section-header{padding:14px 16px;border-bottom:1px solid var(--gray2);font-size:14px;font-weight:800;}
+.record-item{padding:13px 16px;border-bottom:1px solid var(--gray2);display:flex;align-items:center;gap:12px;}
+.record-item:last-child{border-bottom:none;}
+.rec-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.rec-icon.in{background:var(--green3);}
+.rec-icon.out{background:#e8f0fe;}
+.rec-info{flex:1;min-width:0;}
+.rec-info .rec-title{font-size:14px;font-weight:700;}
+.rec-info .rec-sub{font-size:12px;color:var(--gray3);}
+.rec-time{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;}
+
+.empty-records{padding:36px 20px;text-align:center;color:var(--gray3);font-size:13px;}
+
+/* QR 스캔 가짜 화면 */
+.scan-view{display:none;position:fixed;inset:0;background:#000;z-index:1000;flex-direction:column;align-items:center;justify-content:center;}
+.scan-view.active{display:flex;}
+.scan-frame-wrap{position:relative;width:280px;height:280px;background:#0a0a0a;border-radius:16px;overflow:hidden;}
+.scan-frame{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:200px;height:200px;border:3px solid #00c9a7;border-radius:12px;}
+.scan-line{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:200px;height:2px;background:linear-gradient(90deg,transparent,#00c9a7,transparent);animation:scan 2s linear infinite;}
+@keyframes scan{0%{top:25%}50%{top:75%}100%{top:25%}}
+.scan-text{color:#fff;font-size:16px;margin:24px 0 8px;}
+.scan-sub{color:rgba(255,255,255,.6);font-size:13px;margin-bottom:24px;}
+.scan-cancel{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:12px 32px;border-radius:8px;font-size:15px;cursor:pointer;}
+
+/* 성공 모달 */
+.success-view{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:1001;align-items:center;justify-content:center;padding:20px;}
+.success-view.active{display:flex;}
+.success-box{background:#fff;border-radius:20px;padding:36px 28px;text-align:center;width:100%;max-width:320px;animation:popIn .35s cubic-bezier(.34,1.56,.64,1);}
+@keyframes popIn{0%{transform:scale(.7);opacity:0}100%{transform:scale(1);opacity:1}}
+.success-icon{font-size:64px;margin-bottom:12px;}
+.success-box h2{font-size:22px;font-weight:900;margin-bottom:6px;}
+.success-box .success-time{font-size:36px;font-weight:900;color:#00a88a;margin:8px 0 4px;}
+.success-box .success-extra{font-size:13px;color:#00a88a;background:var(--green3);padding:6px 14px;border-radius:20px;display:inline-block;margin:8px 0 20px;}
+.success-box button{width:100%;padding:14px;border-radius:10px;background:linear-gradient(135deg,#00c9a7,#00b096);color:#fff;border:none;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;}
+
+/* ════════════════════════════════════════════════════════════
+   튜토리얼 오버레이 (직원용)
+════════════════════════════════════════════════════════════ */
+.tut-overlay{position:fixed;inset:0;background:rgba(15,27,45,.65);z-index:9000;backdrop-filter:blur(2px);}
+.tut-spotlight{position:absolute;border-radius:14px;box-shadow:0 0 0 9999px rgba(15,27,45,.72),0 0 0 4px var(--green),0 0 30px rgba(0,201,167,.5);pointer-events:none;transition:all .35s cubic-bezier(.4,0,.2,1);z-index:9100;}
+.tut-tooltip{position:absolute;background:#fff;border-radius:14px;padding:18px 20px;max-width:calc(100vw - 32px);left:16px;right:16px;box-shadow:0 12px 40px rgba(0,0,0,.3);z-index:9200;transition:all .35s cubic-bezier(.4,0,.2,1);}
+.tut-tooltip .step-num{font-size:11px;font-weight:800;color:var(--green);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;}
+.tut-tooltip h3{font-size:16px;font-weight:900;margin-bottom:8px;color:var(--dark);}
+.tut-tooltip p{font-size:13px;line-height:1.65;color:var(--gray4);}
+.tut-tooltip .tut-actions{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:16px;}
+.tut-skip{background:none;border:none;color:var(--gray3);font-size:12px;cursor:pointer;font-family:inherit;text-decoration:underline;}
+.tut-prev{background:#fff;border:1.5px solid var(--gray2);padding:8px 14px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--gray4);}
+.tut-next{background:linear-gradient(135deg,#00c9a7,#00b096);color:#fff;border:none;padding:9px 18px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(0,201,167,.3);}
+
+.tut-progress{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.95);border-radius:30px;padding:7px 16px;font-size:11px;font-weight:700;color:var(--dark);box-shadow:0 4px 12px rgba(0,0,0,.15);z-index:9300;display:flex;align-items:center;gap:8px;}
+.tut-progress .dots{display:flex;gap:5px;}
+.tut-progress .dot{width:8px;height:8px;border-radius:50%;background:var(--gray2);transition:.2s;}
+.tut-progress .dot.active{background:var(--green);}
+.tut-progress .dot.done{background:var(--green);opacity:.5;}
+
+.tut-complete{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(15,27,45,.85);z-index:9500;backdrop-filter:blur(6px);padding:20px;}
+.tut-complete.active{display:flex;}
+.tut-complete-box{background:#fff;border-radius:20px;padding:36px 28px;text-align:center;max-width:340px;width:100%;}
+.tut-complete-box .icon{font-size:64px;margin-bottom:14px;}
+.tut-complete-box h2{font-size:20px;font-weight:900;margin-bottom:10px;}
+.tut-complete-box p{font-size:13px;color:var(--gray4);line-height:1.65;margin-bottom:20px;}
+.tut-complete-box .btn-go{width:100%;padding:14px;background:linear-gradient(135deg,#00c9a7,#00b096);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;}
+.tut-complete-box .btn-go.secondary{margin-top:8px;background:#fff;color:var(--gray4);border:1.5px solid var(--gray2);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">SCAN<span>&amp;GO</span></div>
+  <div class="user-info">
+    <strong>김철수</strong>
+    <span>강남점</span>
+  </div>
+</div>
+
+<div class="tut-banner">🎓 직원 사용법 안내 <span>· 첫 화면에서 출퇴근까지</span></div>
+
+<!-- 상태 카드 -->
+<div class="status-card" id="status-card">
+  <div class="store-name">강남점 · 시급제</div>
+  <div class="cur-status" id="cur-status">출근 전</div>
+  <div class="cur-time" id="cur-time">--:--</div>
+  <div class="work-time" id="work-time">QR을 스캔해 출근하세요</div>
+  <div class="status-row">
+    <span class="status-badge gray" id="status-badge">대기 중</span>
+  </div>
+</div>
+
+<!-- QR 버튼 -->
+<div class="qr-section">
+  <button class="qr-main-btn" id="qr-btn">
+    <span class="qr-icon">📷</span>
+    <span id="qr-btn-label">출근 QR 스캔</span>
+    <span class="qr-sub" id="qr-btn-sub">현장의 QR 코드를 스캔하세요</span>
+  </button>
+</div>
+
+<!-- 오늘의 기록 -->
+<div class="section">
+  <div class="section-header">오늘의 기록</div>
+  <div id="records-list">
+    <div class="empty-records" id="empty-records">오늘 기록된 출퇴근이 없습니다</div>
+  </div>
+</div>
+
+<!-- 가짜 QR 스캔 화면 -->
+<div class="scan-view" id="scan-view">
+  <div class="scan-frame-wrap">
+    <div class="scan-frame"></div>
+    <div class="scan-line"></div>
+  </div>
+  <div class="scan-text">QR 코드 인식 중...</div>
+  <div class="scan-sub" id="scan-sub">현장의 QR을 카메라에 비춰주세요</div>
+  <button class="scan-cancel" id="scan-cancel">취소</button>
+</div>
+
+<!-- 성공 모달 -->
+<div class="success-view" id="success-view">
+  <div class="success-box">
+    <div class="success-icon" id="succ-icon">✅</div>
+    <h2 id="succ-title">출근 완료!</h2>
+    <div class="success-time" id="succ-time">09:00</div>
+    <div class="success-extra" id="succ-extra">강남점</div>
+    <button id="succ-close">확인</button>
+  </div>
+</div>
+
+<!-- 튜토리얼 오버레이 -->
+<div class="tut-overlay" id="tut-overlay"></div>
+<div class="tut-spotlight" id="tut-spotlight"></div>
+<div class="tut-tooltip" id="tut-tooltip">
+  <div class="step-num" id="step-num">단계 1 / 3</div>
+  <h3 id="step-title"></h3>
+  <p id="step-desc"></p>
+  <div class="tut-actions">
+    <button class="tut-skip" id="btn-skip">건너뛰기</button>
+    <div style="display:flex;gap:8px;margin-left:auto">
+      <button class="tut-prev" id="btn-prev" style="display:none">이전</button>
+      <button class="tut-next" id="btn-next">다음 →</button>
+    </div>
+  </div>
+</div>
+
+<div class="tut-progress">
+  <span>직원 사용법 안내</span>
+  <div class="dots">
+    <div class="dot active"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+  </div>
+</div>
+
+<div class="tut-complete" id="tut-complete">
+  <div class="tut-complete-box">
+    <div class="icon">🎉</div>
+    <h2>교육 완료!</h2>
+    <p>출퇴근 사용법을 모두 익히셨어요.<br>실제 사용 중에 다시 보고 싶으시면 메뉴에서 <strong>튜토리얼 다시 보기</strong>를 눌러주세요.</p>
+    <button class="btn-go" id="btn-finish">시작하기</button>
+    <button class="btn-go secondary" id="btn-restart">다시 보기</button>
+  </div>
+</div>
+
+<script type="module">
+import { supabase } from './src/lib/supabase.js';
+
+const $ = (s) => document.querySelector(s);
+const isDemo = new URLSearchParams(location.search).get('demo') === '1';
+
+let state = 'before'; // before | working | done
+
+function fmtTime(d){
+  const h = String(d.getHours()).padStart(2,'0');
+  const m = String(d.getMinutes()).padStart(2,'0');
+  return `${h}:${m}`;
+}
+
+// ── 출근 처리 ──
+function doCheckIn(){
+  state = 'working';
+  const now = new Date();
+  const t = fmtTime(now);
+  $('#cur-status').textContent = '근무 중';
+  $('#cur-time').textContent = t;
+  $('#work-time').textContent = `${t} 출근`;
+  $('#status-badge').textContent = '근무 중';
+  $('#status-badge').classList.remove('gray');
+  $('#qr-btn-label').textContent = '퇴근 QR 스캔';
+  $('#qr-btn-sub').textContent = '퇴근 시 다시 스캔하세요';
+  $('#qr-btn').classList.add('checkout');
+
+  $('#empty-records')?.remove();
+  $('#records-list').insertAdjacentHTML('beforeend', `
+    <div class="record-item">
+      <div class="rec-icon in">🟢</div>
+      <div class="rec-info">
+        <div class="rec-title">출근</div>
+        <div class="rec-sub">강남점</div>
+      </div>
+      <div class="rec-time">${t}</div>
+    </div>
+  `);
+
+  // 성공 모달
+  showSuccess('출근 완료!', t, '강남점', '✅');
+}
+
+// ── 퇴근 처리 ──
+function doCheckOut(){
+  state = 'done';
+  const now = new Date();
+  const t = fmtTime(now);
+  $('#cur-status').textContent = '퇴근 완료';
+  $('#cur-time').textContent = t;
+  $('#work-time').textContent = '오늘도 수고하셨어요!';
+  $('#status-badge').textContent = '퇴근';
+  $('#status-badge').classList.add('gray');
+  $('#status-card').classList.add('checkedout');
+  $('#qr-btn-label').textContent = '오늘 근무 종료';
+  $('#qr-btn-sub').textContent = '내일 다시 만나요';
+  $('#qr-btn').disabled = true;
+  $('#qr-btn').style.opacity = '.55';
+
+  $('#records-list').insertAdjacentHTML('beforeend', `
+    <div class="record-item">
+      <div class="rec-icon out">🔵</div>
+      <div class="rec-info">
+        <div class="rec-title">퇴근</div>
+        <div class="rec-sub">강남점</div>
+      </div>
+      <div class="rec-time">${t}</div>
+    </div>
+  `);
+
+  showSuccess('퇴근 완료!', t, '오늘도 수고하셨어요', '🎉');
+}
+
+function showSuccess(title, time, extra, icon){
+  $('#succ-title').textContent = title;
+  $('#succ-time').textContent = time;
+  $('#succ-extra').textContent = extra;
+  $('#succ-icon').textContent = icon;
+  $('#success-view').classList.add('active');
+}
+
+// 가짜 스캔 후 자동 출근/퇴근
+function simulateScan(onDone){
+  $('#scan-view').classList.add('active');
+  $('#scan-sub').textContent = '잠시 후 자동으로 인식됩니다...';
+  setTimeout(()=>{
+    $('#scan-view').classList.remove('active');
+    onDone();
+  }, 1600);
+}
+
+// ── 이벤트 ──
+$('#qr-btn').addEventListener('click', ()=>{
+  if(state==='before'){
+    simulateScan(()=>{
+      doCheckIn();
+      if(currentStep===2) setTimeout(()=>{ $('#success-view').classList.remove('active'); nextStep(); }, 1800);
+    });
+  } else if(state==='working'){
+    simulateScan(()=>{
+      doCheckOut();
+      if(currentStep===3) setTimeout(()=>{ $('#success-view').classList.remove('active'); nextStep(); }, 1800);
+    });
+  }
+});
+$('#scan-cancel').addEventListener('click', ()=>{
+  $('#scan-view').classList.remove('active');
+});
+$('#succ-close').addEventListener('click', ()=>{
+  $('#success-view').classList.remove('active');
+});
+
+// ════════════════════════════════════════════
+// 튜토리얼 컨트롤러
+// ════════════════════════════════════════════
+const steps = [
+  {
+    targetSel:'#status-card',
+    title:'1️⃣ 내 상태 카드',
+    desc:'현재 출근 여부와 시간, 근무 시간이 한눈에 보입니다.<br>지금은 <b>출근 전</b> 상태예요.',
+    waitClick:false,
+  },
+  {
+    targetSel:'#qr-btn',
+    title:'2️⃣ 출근하기',
+    desc:'현장에 부착된 QR 코드를 스캔하면 출근 기록이 자동으로 남습니다.<br><br><b>QR 스캔 버튼을 눌러보세요.</b>',
+    waitClick:true,
+  },
+  {
+    targetSel:'#qr-btn',
+    title:'3️⃣ 퇴근하기',
+    desc:'퇴근할 때도 같은 QR을 한 번 더 스캔합니다.<br>버튼이 파란색으로 바뀐 게 보이시죠?<br><br><b>퇴근 QR 스캔 버튼을 눌러보세요.</b>',
+    waitClick:true,
+  },
+];
+
+let currentStep = 0;
+
+function showStep(idx){
+  currentStep = idx + 1;
+  const step = steps[idx];
+  if(!step){ finish(); return; }
+
+  document.querySelectorAll('.tut-progress .dot').forEach((d,i)=>{
+    d.classList.remove('active','done');
+    if(i+1 < currentStep) d.classList.add('done');
+    else if(i+1 === currentStep) d.classList.add('active');
+  });
+
+  setTimeout(()=>{
+    positionSpotlight(step);
+    $('#step-num').textContent = `단계 ${currentStep} / ${steps.length}`;
+    $('#step-title').textContent = step.title;
+    $('#step-desc').innerHTML = step.desc;
+    $('#btn-prev').style.display = idx === 0 ? 'none' : '';
+    $('#btn-next').textContent = step.waitClick ? '버튼 클릭 대기 중...' : (idx === steps.length-1 ? '완료' : '다음 →');
+    $('#btn-next').disabled = !!step.waitClick;
+    $('#btn-next').style.opacity = step.waitClick ? '.4' : '1';
+  }, 150);
+}
+
+function positionSpotlight(step){
+  const target = document.querySelector(step.targetSel);
+  if(!target) return;
+  const rect = target.getBoundingClientRect();
+  const pad = 8;
+  const sp = $('#tut-spotlight');
+  sp.style.display = 'block';
+  sp.style.top = (rect.top - pad) + 'px';
+  sp.style.left = (rect.left - pad) + 'px';
+  sp.style.width = (rect.width + pad*2) + 'px';
+  sp.style.height = (rect.height + pad*2) + 'px';
+
+  // 툴팁 위치 - 폰 화면이라 위/아래 결정
+  const tt = $('#tut-tooltip');
+  const spaceBelow = window.innerHeight - rect.bottom;
+  if(spaceBelow > 220){
+    tt.style.top = (rect.bottom + 16) + 'px';
+    tt.style.bottom = 'auto';
+  } else {
+    tt.style.top = 'auto';
+    tt.style.bottom = (window.innerHeight - rect.top + 16) + 'px';
+  }
+
+  target.style.position = target.style.position || 'relative';
+  target.style.zIndex = 9150;
+}
+
+function nextStep(){
+  const prev = steps[currentStep-1];
+  if(prev?.targetSel){
+    const el = document.querySelector(prev.targetSel);
+    if(el) el.style.zIndex = '';
+  }
+  if(currentStep >= steps.length){ finish(); return; }
+  showStep(currentStep);
+}
+
+function prevStep(){
+  if(currentStep <= 1) return;
+  showStep(currentStep - 2);
+}
+
+async function finish(){
+  $('#tut-overlay').style.display = 'none';
+  $('#tut-spotlight').style.display = 'none';
+  $('#tut-tooltip').style.display = 'none';
+  $('#tut-complete').classList.add('active');
+
+  if(!isDemo){
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if(user){
+        await supabase.from('profiles')
+          .update({ tutorial_employee_done: true })
+          .eq('user_id', user.id);
+      }
+    } catch(e){ console.warn('튜토리얼 완료 저장 실패', e); }
+  }
+}
+
+$('#btn-next').addEventListener('click', ()=>{
+  if($('#btn-next').disabled) return;
+  if(currentStep >= steps.length){ finish(); return; }
+  nextStep();
+});
+$('#btn-prev').addEventListener('click', prevStep);
+$('#btn-skip').addEventListener('click', ()=>{
+  if(confirm('교육을 건너뛰시겠어요?\n메뉴에서 언제든지 다시 볼 수 있습니다.')) finish();
+});
+$('#btn-finish').addEventListener('click', ()=>{
+  if(isDemo) location.href = 'index.html';
+  else location.href = 'employee.html';
+});
+$('#btn-restart').addEventListener('click', ()=>{ location.reload(); });
+
+window.addEventListener('resize', ()=>{
+  if(currentStep > 0 && currentStep <= steps.length){
+    const step = steps[currentStep - 1];
+    if(step) positionSpotlight(step);
+  }
+});
+
+// 시작
+setTimeout(()=>showStep(0), 300);
+</script>
+</body>
+</html>

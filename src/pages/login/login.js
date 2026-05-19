@@ -1,5 +1,5 @@
 import { supabase } from '../../lib/supabase.js';
-import { signUpOwner, signInOwner, signUpEmployee, signInEmployee, getMyProfile, routeForRole } from '../../lib/auth.js';
+import { signUpOwner, signInOwner, signUpEmployee, signInEmployee, getMyProfile, routeForRole, routeAfterAuth } from '../../lib/auth.js';
 import { toast } from '../../lib/toast.js';
 
 const $ = (s, root = document) => root.querySelector(s);
@@ -143,7 +143,7 @@ async function redirectIfLoggedIn() {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return;
   const profile = await getMyProfile();
-  if (profile?.role) location.href = routeForRole(profile.role);
+  if (profile?.role) location.href = routeAfterAuth(profile);
 }
 redirectIfLoggedIn();
 
@@ -238,7 +238,7 @@ $('#form-owner-login')?.addEventListener('submit', async (e) => {
       showSignupForCompletion();
       return;
     }
-    location.href = routeForRole(p.role);
+    location.href = routeAfterAuth(p);
   } catch (err) {
     toast(humanError(err), 'error');
     btn.disabled = false; btn.textContent = orig;
@@ -268,7 +268,7 @@ $('#form-owner-signup')?.addEventListener('submit', async (e) => {
       if (error && error.message !== 'ALREADY_BOOTSTRAPPED') throw error;
       await supabase.auth.refreshSession();
       toast('가입 완료! 30일 무료체험이 시작됩니다.', 'success');
-      location.href = 'dashboard.html';
+      location.href = 'tutorial-owner.html';
       return;
     }
 
@@ -286,7 +286,7 @@ $('#form-owner-signup')?.addEventListener('submit', async (e) => {
       return;
     }
     toast('가입 완료! 무료체험 7일이 시작됩니다.', 'success');
-    location.href = 'dashboard.html';
+    location.href = 'tutorial-owner.html';
   } catch (err) {
     toast(humanError(err), 'error');
     btn.disabled = false; btn.textContent = orig;
@@ -305,7 +305,7 @@ $('#form-emp-login')?.addEventListener('submit', async (e) => {
     await signInEmployee({ phone, password });
     const p = await getMyProfile();
     if (!p) throw new Error('직원 정보를 찾을 수 없습니다');
-    location.href = routeForRole(p.role);
+    location.href = routeAfterAuth(p);
   } catch (err) {
     toast(humanError(err), 'error');
     btn.disabled = false; btn.textContent = orig;
@@ -333,7 +333,7 @@ $('#form-emp-signup')?.addEventListener('submit', async (e) => {
       return;
     }
     toast('가입 완료!', 'success');
-    location.href = 'employee.html';
+    location.href = 'tutorial-employee.html';
   } catch (err) {
     toast(humanError(err), 'error');
     btn.disabled = false; btn.textContent = orig;

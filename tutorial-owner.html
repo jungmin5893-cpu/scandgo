@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0f1b2d">
+<title>SCAN&GO — 사장님 사용법 안내</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --primary:#0F2942;--gold:#B8935A;--green:#00c9a7;--green3:#e0faf6;
+  --navy:#0F2942;--gray1:#f4f6f9;--gray2:#e2e7ef;--gray3:#8a94a6;--gray4:#3d4a5c;
+  --dark:#0F2942;--white:#fff;--red:#8B2C2C;
+  --shadow:0 1px 6px rgba(0,0,0,.06);--radius:8px;
+}
+html,body{height:100%;}
+body{font-family:'Inter','Malgun Gothic','Apple SD Gothic Neo',sans-serif;background:var(--gray1);color:var(--dark);min-height:100vh;display:flex;justify-content:center;}
+
+.app-wrap{display:flex;width:100%;max-width:1440px;min-height:100vh;position:relative;}
+
+/* ── 사이드바 ── */
+.sidebar{width:220px;background:var(--navy);color:#fff;display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;z-index:50;}
+.side-head{padding:20px 18px 14px;border-bottom:1px solid rgba(255,255,255,.08);}
+.side-head .logo{font-size:20px;font-weight:900;letter-spacing:3px;color:#fff;}
+.side-head .logo span{color:var(--gold);}
+.side-head .biz{font-size:12px;color:rgba(255,255,255,.5);margin-top:4px;}
+.trial-badge{margin:8px 18px 0;padding:5px 10px;background:rgba(184,147,90,.2);border:1px solid rgba(184,147,90,.4);border-radius:4px;font-size:11px;font-weight:700;text-align:center;color:var(--gold);}
+.nav-section{padding:14px 18px 4px;font-size:10px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:1px;text-transform:uppercase;}
+.nav-list{flex:1;padding:8px 0;}
+.nav-item{padding:10px 18px;font-size:13px;color:rgba(255,255,255,.65);cursor:pointer;display:flex;align-items:center;gap:9px;border:none;background:none;width:100%;text-align:left;font-family:inherit;border-left:3px solid transparent;transition:.12s;}
+.nav-item:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.9);}
+.nav-item.active{background:rgba(184,147,90,.12);color:var(--gold);font-weight:700;border-left-color:var(--gold);}
+.nav-item .ic{font-size:15px;width:18px;text-align:center;}
+.side-foot{padding:14px 22px;border-top:1px solid rgba(255,255,255,.06);}
+.owner-chip{display:flex;align-items:center;gap:8px;font-size:13px;}
+.owner-chip .avatar{width:30px;height:30px;border-radius:50%;background:var(--green);color:var(--navy);display:flex;align-items:center;justify-content:center;font-weight:800;}
+
+/* ── 메인 ── */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:auto;}
+.topbar{display:none;background:#fff;border-bottom:1px solid var(--gray2);padding:12px 16px;align-items:center;gap:12px;position:sticky;top:0;z-index:10;}
+.topbar .logo{font-size:16px;font-weight:900;letter-spacing:2px;}
+.topbar .logo span{color:var(--green);}
+.mobile-menu{background:none;border:none;font-size:22px;cursor:pointer;padding:2px 6px;}
+.view-root{padding:24px 28px;flex:1;}
+
+.page-head{margin-bottom:22px;}
+.page-head h1{font-size:22px;font-weight:900;letter-spacing:-.3px;}
+.page-head .page-sub{color:var(--gray3);font-size:13px;margin-top:5px;}
+
+.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden;border:1px solid var(--gray2);border-left:4px solid var(--gold);}
+.card-head{padding:14px 18px;border-bottom:1px solid var(--gray2);}
+.card-head h2{font-size:14px;font-weight:800;color:var(--navy);}
+.card-head .card-sub{font-size:12px;color:var(--gray3);margin-top:2px;}
+
+.empty-state{padding:48px 20px;text-align:center;color:var(--gray3);font-size:14px;}
+.empty-state .icon{font-size:42px;margin-bottom:10px;opacity:.4;}
+
+.btn{padding:9px 16px;border-radius:8px;border:1.5px solid var(--gray2);background:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--dark);transition:.15s;}
+.btn:hover{background:var(--gray1);}
+.btn.primary{background:linear-gradient(135deg,#00c9a7,#00b096);color:#fff;border-color:transparent;box-shadow:0 2px 8px rgba(0,201,167,.28);}
+.btn.primary:hover{filter:brightness(.95);}
+.btn.small{padding:5px 11px;font-size:12px;}
+
+.form-row{display:flex;gap:10px;padding:14px 20px;flex-wrap:wrap;align-items:center;}
+.form-row input,.form-row select{flex:1;min-width:140px;padding:10px 12px;border:1.5px solid var(--gray2);border-radius:8px;font-size:13px;font-family:inherit;}
+.form-row input:focus,.form-row select:focus{border-color:var(--green);outline:none;}
+
+/* ── 매장 카드 ── */
+.store-card{padding:0;}
+.store-toggle-head{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:14px 18px;transition:background .15s;}
+.store-toggle-head:hover{background:rgba(0,201,167,.06);}
+.store-toggle-head h3{margin:0;font-size:15px;font-weight:800;}
+.store-emp-badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;background:rgba(138,148,166,.12);color:var(--gray3);margin-left:8px;}
+.store-emp-badge.active{background:rgba(0,201,167,.15);color:var(--green);}
+.store-chevron{font-size:13px;color:var(--gray3);transition:transform .2s;}
+.store-detail{padding:0 18px 16px;}
+.store-qr-wrap{display:flex;gap:20px;flex-wrap:wrap;}
+.qr-block{display:flex;flex-direction:column;align-items:center;gap:8px;}
+.qr-canvas{background:#fff;padding:8px;border-radius:8px;border:1px solid var(--gray2);width:200px;height:200px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--gray3);background:repeating-conic-gradient(#0F2942 0% 25%,#fff 0% 50%) 50%/16px 16px;}
+.store-info{font-size:13px;line-height:1.8;flex:1;min-width:240px;}
+.store-info code{font-family:'Courier New',monospace;font-size:11px;background:var(--gray1);padding:6px 8px;border-radius:6px;display:inline-block;margin-top:4px;word-break:break-all;}
+
+/* ── 초대코드 ── */
+.invite-code-box{background:linear-gradient(135deg,rgba(0,201,167,.1),rgba(184,147,90,.08));border:2px dashed var(--green);border-radius:12px;padding:24px;text-align:center;margin:16px 0;}
+.invite-code-box .code{font-size:36px;font-weight:900;letter-spacing:6px;color:var(--green);font-family:'Courier New',monospace;}
+.invite-code-box .label{font-size:12px;color:var(--gray4);margin-top:6px;}
+
+/* ── 출퇴근 테이블 ── */
+.att-table{width:100%;border-collapse:collapse;font-size:13px;}
+.att-table th{background:var(--gray1);text-align:left;padding:10px 16px;font-weight:700;color:var(--gray4);border-bottom:1px solid var(--gray2);font-size:11px;text-transform:uppercase;}
+.att-table td{padding:11px 16px;border-bottom:1px solid var(--gray2);}
+.att-table tr:last-child td{border-bottom:none;}
+.att-table .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;background:var(--green3);color:#00a88a;}
+
+/* ── KPI ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
+.kpi-card{background:#fff;border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);border:1px solid var(--gray2);border-left:4px solid var(--primary);}
+.kpi-card .kpi-label{font-size:11px;color:var(--gray3);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.kpi-card .kpi-val{font-size:28px;font-weight:900;color:var(--primary);line-height:1;}
+.kpi-card .kpi-foot{font-size:11px;color:var(--gray3);margin-top:5px;}
+
+/* ════════════════════════════════════════════════════════════
+   튜토리얼 오버레이
+════════════════════════════════════════════════════════════ */
+.tut-overlay{position:fixed;inset:0;background:rgba(15,27,45,.62);z-index:9000;pointer-events:auto;backdrop-filter:blur(2px);}
+.tut-spotlight{position:absolute;border-radius:10px;box-shadow:0 0 0 9999px rgba(15,27,45,.7),0 0 0 4px var(--green),0 0 30px rgba(0,201,167,.5);pointer-events:none;transition:all .35s cubic-bezier(.4,0,.2,1);z-index:9100;}
+.tut-tooltip{position:absolute;background:#fff;border-radius:14px;padding:20px 22px;max-width:340px;box-shadow:0 12px 40px rgba(0,0,0,.3);z-index:9200;transition:all .35s cubic-bezier(.4,0,.2,1);}
+.tut-tooltip .step-num{font-size:11px;font-weight:800;color:var(--green);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;}
+.tut-tooltip h3{font-size:17px;font-weight:900;margin-bottom:8px;color:var(--dark);}
+.tut-tooltip p{font-size:13px;line-height:1.65;color:var(--gray4);}
+.tut-tooltip .tut-actions{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:18px;}
+.tut-tooltip .tut-actions .left{display:flex;gap:6px;}
+.tut-skip{background:none;border:none;color:var(--gray3);font-size:12px;cursor:pointer;font-family:inherit;text-decoration:underline;}
+.tut-prev{background:#fff;border:1.5px solid var(--gray2);padding:8px 14px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--gray4);}
+.tut-next{background:linear-gradient(135deg,#00c9a7,#00b096);color:#fff;border:none;padding:9px 18px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(0,201,167,.3);}
+.tut-next:hover{filter:brightness(.95);}
+
+/* 진행 표시 */
+.tut-progress{position:fixed;top:18px;right:24px;background:rgba(255,255,255,.95);border-radius:30px;padding:8px 18px;font-size:12px;font-weight:700;color:var(--dark);box-shadow:0 4px 12px rgba(0,0,0,.15);z-index:9300;display:flex;align-items:center;gap:10px;}
+.tut-progress .dots{display:flex;gap:5px;}
+.tut-progress .dot{width:8px;height:8px;border-radius:50%;background:var(--gray2);transition:.2s;}
+.tut-progress .dot.active{background:var(--green);}
+.tut-progress .dot.done{background:var(--green);opacity:.5;}
+
+/* 완료 화면 */
+.tut-complete{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(15,27,45,.85);z-index:9500;backdrop-filter:blur(6px);}
+.tut-complete.active{display:flex;}
+.tut-complete-box{background:#fff;border-radius:20px;padding:40px 32px;text-align:center;max-width:380px;width:90%;}
+.tut-complete-box .icon{font-size:64px;margin-bottom:14px;}
+.tut-complete-box h2{font-size:22px;font-weight:900;margin-bottom:10px;}
+.tut-complete-box p{font-size:14px;color:var(--gray4);line-height:1.7;margin-bottom:22px;}
+.tut-complete-box .btn-go{width:100%;padding:14px;background:linear-gradient(135deg,#00c9a7,#00b096);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;}
+.tut-complete-box .btn-go.secondary{margin-top:8px;background:#fff;color:var(--gray4);border:1.5px solid var(--gray2);}
+
+@media (max-width:900px){
+  .sidebar{position:fixed;left:0;top:0;height:100%;transform:translateX(-100%);transition:transform .22s;z-index:100;}
+  .sidebar.open{transform:translateX(0);box-shadow:12px 0 32px rgba(0,0,0,.3);}
+  .topbar{display:flex;}
+  .kpi-grid{grid-template-columns:repeat(2,1fr);}
+  .view-root{padding:16px;}
+  .tut-tooltip{max-width:calc(100vw - 32px);left:16px!important;right:16px!important;}
+}
+@media (max-width:600px){
+  .view-root{padding:12px 14px;}
+  .store-qr-wrap{flex-direction:column;}
+}
+</style>
+</head>
+<body>
+
+<div class="app-wrap">
+  <aside class="sidebar" id="sidebar">
+    <div class="side-head">
+      <div class="logo">SCAN<span>&amp;GO</span></div>
+      <div class="biz">사장님 사용법 안내</div>
+    </div>
+    <div class="trial-badge">🎓 교육 모드</div>
+    <nav class="nav-list">
+      <div class="nav-section">기본</div>
+      <button class="nav-item" data-route="overview"><span class="ic">▣</span>대시보드</button>
+      <div class="nav-section">관리</div>
+      <button class="nav-item active" id="nav-stores" data-route="stores"><span class="ic">○</span>현장 / QR</button>
+      <button class="nav-item" id="nav-employees" data-route="employees"><span class="ic">○</span>직원 관리</button>
+      <button class="nav-item" id="nav-attendance" data-route="attendance"><span class="ic">○</span>출퇴근</button>
+    </nav>
+    <div class="side-foot">
+      <div class="owner-chip">
+        <div class="avatar">사</div>
+        <div><div style="font-size:13px;font-weight:600">사장님</div><div style="font-size:10px;color:rgba(255,255,255,.4)">체험 중</div></div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <button class="mobile-menu" id="mobile-menu">☰</button>
+      <div class="logo">SCAN<span>&amp;GO</span></div>
+    </div>
+    <div class="view-root" id="view-root"></div>
+  </main>
+</div>
+
+<!-- 튜토리얼 오버레이 -->
+<div class="tut-overlay" id="tut-overlay"></div>
+<div class="tut-spotlight" id="tut-spotlight"></div>
+<div class="tut-tooltip" id="tut-tooltip">
+  <div class="step-num" id="step-num">단계 1 / 4</div>
+  <h3 id="step-title"></h3>
+  <p id="step-desc"></p>
+  <div class="tut-actions">
+    <button class="tut-skip" id="btn-skip">건너뛰기</button>
+    <div class="left" style="margin-left:auto;display:flex;gap:8px">
+      <button class="tut-prev" id="btn-prev" style="display:none">이전</button>
+      <button class="tut-next" id="btn-next">다음 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- 진행 표시 -->
+<div class="tut-progress">
+  <span id="prog-label">사장님 사용법 안내</span>
+  <div class="dots">
+    <div class="dot active" data-step="1"></div>
+    <div class="dot" data-step="2"></div>
+    <div class="dot" data-step="3"></div>
+    <div class="dot" data-step="4"></div>
+  </div>
+</div>
+
+<!-- 완료 모달 -->
+<div class="tut-complete" id="tut-complete">
+  <div class="tut-complete-box">
+    <div class="icon">🎉</div>
+    <h2>교육 완료!</h2>
+    <p>이제 SCAN&GO의 핵심 기능을 모두 익히셨어요.<br>실제 사용 중에 다시 보고 싶으시면 <strong>설정 → 튜토리얼 다시 보기</strong>를 눌러주세요.</p>
+    <button class="btn-go" id="btn-finish">시작하기</button>
+    <button class="btn-go secondary" id="btn-restart">다시 보기</button>
+  </div>
+</div>
+
+<script type="module">
+import { supabase } from './src/lib/supabase.js';
+
+const $ = (s) => document.querySelector(s);
+const isDemo = new URLSearchParams(location.search).get('demo') === '1';
+
+// ── 화면별 가상 데이터 / 마크업 ──────────────────────────
+const views = {
+  stores: () => `
+    <div class="page-head">
+      <h1>현장 / QR</h1>
+      <div class="page-sub">현장을 등록하면 출퇴근 QR이 자동 생성됩니다</div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <h2>새 현장 추가</h2>
+        <div class="card-sub">현장 이름과 위치를 입력하세요</div>
+      </div>
+      <form class="form-row" id="store-form" onsubmit="return false">
+        <input id="store-name" type="text" placeholder="현장 이름 (예: 강남점)" value="강남점">
+        <input id="store-radius" type="number" placeholder="반경(m)" value="100" style="max-width:120px">
+        <button class="btn primary" id="btn-add-store" type="button">+ 현장 추가</button>
+      </form>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <h2>등록된 현장</h2>
+        <div class="card-sub">탭하여 QR과 정보를 확인하세요</div>
+      </div>
+      <div id="stores-list">
+        <div class="empty-state" id="empty-stores">
+          <div class="icon">🏪</div>
+          아직 등록된 현장이 없습니다
+        </div>
+      </div>
+    </div>
+  `,
+  employees: () => `
+    <div class="page-head">
+      <h1>직원 관리</h1>
+      <div class="page-sub">직원을 초대하고 정보를 관리합니다</div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <h2>근로자 초대</h2>
+        <div class="card-sub">전화번호를 등록하면 가입 코드가 자동 생성됩니다</div>
+      </div>
+      <form class="form-row" onsubmit="return false">
+        <input id="emp-name" type="text" placeholder="이름 (선택)" value="김철수">
+        <input id="emp-phone" type="text" placeholder="010-1234-5678" value="010-1234-5678">
+        <button class="btn primary" id="btn-invite" type="button">가입 코드 발급</button>
+      </form>
+      <div id="invite-result" style="padding:0 20px 20px"></div>
+    </div>
+  `,
+  attendance: () => `
+    <div class="page-head">
+      <h1>출퇴근 현황</h1>
+      <div class="page-sub">직원들의 실시간 출퇴근 기록</div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-label">오늘 출근</div><div class="kpi-val">2명</div><div class="kpi-foot">전체 1명 중</div></div>
+      <div class="kpi-card"><div class="kpi-label">근무 중</div><div class="kpi-val" style="color:var(--green)">1명</div><div class="kpi-foot">현재 시점</div></div>
+      <div class="kpi-card"><div class="kpi-label">이번 주 총 근무</div><div class="kpi-val">42h</div><div class="kpi-foot">전 직원 합산</div></div>
+      <div class="kpi-card"><div class="kpi-label">이번 달 출근일</div><div class="kpi-val">18일</div><div class="kpi-foot">평균</div></div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <h2>최근 출퇴근 기록</h2>
+        <div class="card-sub">직원이 QR을 스캔하면 자동으로 기록됩니다</div>
+      </div>
+      <table class="att-table">
+        <thead><tr><th>이름</th><th>현장</th><th>출근</th><th>퇴근</th><th>상태</th></tr></thead>
+        <tbody>
+          <tr><td><b>김철수</b></td><td>강남점</td><td>08:55</td><td>—</td><td><span class="pill">근무 중</span></td></tr>
+          <tr><td><b>이영희</b></td><td>강남점</td><td>09:02</td><td>18:05</td><td><span class="pill" style="background:#e2e7ef;color:#3d4a5c">퇴근</span></td></tr>
+          <tr><td><b>박민수</b></td><td>홍대점</td><td>10:15</td><td>19:30</td><td><span class="pill" style="background:#e2e7ef;color:#3d4a5c">퇴근</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  `,
+};
+
+// ── 라우팅 ────────────────────────────────────
+function setActiveNav(route){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.route===route));
+}
+function navigate(route){
+  $('#view-root').innerHTML = views[route]();
+  setActiveNav(route);
+  bindRouteHandlers(route);
+}
+function bindRouteHandlers(route){
+  if(route==='stores'){
+    $('#btn-add-store').addEventListener('click', addStore);
+  } else if(route==='employees'){
+    $('#btn-invite').addEventListener('click', issueInvite);
+  }
+}
+
+// ── 스텝 1: 현장 추가 ─────────────────────
+function addStore(){
+  const name = $('#store-name').value.trim() || '강남점';
+  const list = $('#stores-list');
+  $('#empty-stores')?.remove();
+  const html = `
+    <div class="card store-card" style="margin:14px 20px 16px;border-left:4px solid var(--gold)">
+      <div class="store-toggle-head" id="store-toggle">
+        <div style="display:flex;align-items:center;gap:6px">
+          <h3>${name}</h3>
+          <span class="store-emp-badge">직원 0명</span>
+        </div>
+        <span class="store-chevron">▼</span>
+      </div>
+      <div class="store-detail" id="store-detail" style="display:none">
+        <div class="store-qr-wrap">
+          <div class="qr-block">
+            <div class="qr-canvas">QR 미리보기</div>
+            <div style="display:flex;gap:6px;margin-top:8px">
+              <button class="btn small">⬇ QR 저장</button>
+              <button class="btn small">🖨 프린트</button>
+            </div>
+          </div>
+          <div class="store-info">
+            <div style="font-size:12px;color:var(--gray3)"><b>위치:</b> 자동 설정됨</div>
+            <div style="font-size:12px;color:var(--gray3);margin-top:4px"><b>반경:</b> ${$('#store-radius')?.value||100}m</div>
+            <div style="font-size:11px;color:var(--gray3);margin-top:6px">
+              <code>scandgo://checkin?store=demo-001</code>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  list.insertAdjacentHTML('beforeend', html);
+  $('#store-toggle').addEventListener('click', ()=>{
+    const d = $('#store-detail');
+    const open = d.style.display !== 'none';
+    d.style.display = open ? 'none' : 'block';
+    document.querySelector('.store-chevron').textContent = open ? '▼' : '▲';
+  });
+
+  // 스텝 진행
+  if(currentStep===1) nextStep();
+}
+
+// ── 스텝 3: 초대 코드 발급 ─────────────────
+function issueInvite(){
+  $('#invite-result').innerHTML = `
+    <div class="invite-code-box">
+      <div class="label">발급된 가입 코드</div>
+      <div class="code">AB7K9X</div>
+      <div class="label" style="margin-top:14px">이 코드를 직원에게 알려주세요<br>직원은 앱에서 이 코드로 가입합니다</div>
+    </div>
+  `;
+  if(currentStep===3) nextStep();
+}
+
+// ════════════════════════════════════════════
+// 튜토리얼 컨트롤러
+// ════════════════════════════════════════════
+const steps = [
+  {
+    route:'stores',
+    targetSel:'#btn-add-store',
+    title:'1️⃣ 현장(매장)을 등록해보세요',
+    desc:'먼저 출퇴근을 관리할 현장을 등록합니다.<br>"강남점"이 미리 입력되어 있어요.<br><br><b>+ 현장 추가</b> 버튼을 눌러보세요.',
+    waitClick:true,
+  },
+  {
+    route:'stores',
+    targetSel:'#store-toggle',
+    title:'2️⃣ QR 코드를 확인해보세요',
+    desc:'등록된 현장을 탭하면 QR 코드가 펼쳐집니다.<br>이 QR을 출력해 현장에 부착하면, 직원이 스캔해 출퇴근합니다.<br><br><b>강남점 카드를 눌러보세요.</b>',
+    waitClick:true,
+    onClick:(e)=>{
+      // 매장 카드 클릭 시 자동 펼쳐지므로 클릭 후 진행
+      setTimeout(nextStep, 400);
+    },
+  },
+  {
+    route:'employees',
+    targetSel:'#btn-invite',
+    title:'3️⃣ 직원을 초대해보세요',
+    desc:'직원의 전화번호를 입력하면 6자리 초대 코드가 발급됩니다.<br>직원은 이 코드로 앱에서 가입합니다.<br><br><b>가입 코드 발급</b> 버튼을 눌러보세요.',
+    waitClick:true,
+  },
+  {
+    route:'attendance',
+    targetSel:'.att-table',
+    title:'4️⃣ 출퇴근 기록을 확인해보세요',
+    desc:'직원이 현장에서 QR을 스캔하면 여기에 자동 기록됩니다.<br>실시간 근무 상태, 근무 시간, 출근일 수까지 한눈에 볼 수 있어요.<br><br>이제 SCAN&GO의 핵심 기능을 모두 익히셨어요!',
+    nextLabel:'완료',
+  },
+];
+
+let currentStep = 0;
+
+function showStep(idx){
+  currentStep = idx + 1;
+  const step = steps[idx];
+  if(!step){ finish(); return; }
+
+  // 페이지 이동
+  if(document.querySelector('.nav-item.active')?.dataset.route !== step.route){
+    navigate(step.route);
+  }
+
+  // 진행 표시 업데이트
+  document.querySelectorAll('.tut-progress .dot').forEach((d,i)=>{
+    d.classList.remove('active','done');
+    if(i+1 < currentStep) d.classList.add('done');
+    else if(i+1 === currentStep) d.classList.add('active');
+  });
+
+  setTimeout(()=>{
+    positionSpotlight(step);
+    $('#step-num').textContent = `단계 ${currentStep} / ${steps.length}`;
+    $('#step-title').textContent = step.title;
+    $('#step-desc').innerHTML = step.desc;
+    $('#btn-prev').style.display = idx === 0 ? 'none' : '';
+    $('#btn-next').textContent = step.nextLabel || (step.waitClick ? '클릭 대기 중...' : '다음 →');
+    $('#btn-next').disabled = !!step.waitClick;
+    $('#btn-next').style.opacity = step.waitClick ? '.4' : '1';
+  }, 150);
+}
+
+function positionSpotlight(step){
+  const target = document.querySelector(step.targetSel);
+  if(!target){
+    $('#tut-spotlight').style.display = 'none';
+    centerTooltip();
+    return;
+  }
+  const rect = target.getBoundingClientRect();
+  const pad = 8;
+  const sp = $('#tut-spotlight');
+  sp.style.display = 'block';
+  sp.style.top = (rect.top - pad) + 'px';
+  sp.style.left = (rect.left - pad) + 'px';
+  sp.style.width = (rect.width + pad*2) + 'px';
+  sp.style.height = (rect.height + pad*2) + 'px';
+
+  // 툴팁 위치
+  const tt = $('#tut-tooltip');
+  const ttRect = tt.getBoundingClientRect();
+  let top = rect.bottom + 16;
+  let left = rect.left;
+  if(top + 220 > window.innerHeight) top = rect.top - 220;
+  if(left + 360 > window.innerWidth) left = window.innerWidth - 360 - 16;
+  if(left < 16) left = 16;
+  tt.style.top = top + 'px';
+  tt.style.left = left + 'px';
+  tt.style.right = 'auto';
+
+  // 대상에 클릭 가능하도록 z-index
+  target.style.position = target.style.position || 'relative';
+  target.style.zIndex = 9150;
+}
+
+function centerTooltip(){
+  const tt = $('#tut-tooltip');
+  tt.style.top = '50%';
+  tt.style.left = '50%';
+  tt.style.transform = 'translate(-50%,-50%)';
+}
+
+function nextStep(){
+  // 이전 타겟의 z-index 초기화
+  const prev = steps[currentStep-1];
+  if(prev?.targetSel){
+    const el = document.querySelector(prev.targetSel);
+    if(el) el.style.zIndex = '';
+  }
+  if(currentStep >= steps.length){ finish(); return; }
+  showStep(currentStep);
+}
+
+function prevStep(){
+  if(currentStep <= 1) return;
+  showStep(currentStep - 2);
+}
+
+async function finish(){
+  // 오버레이 숨김
+  $('#tut-overlay').style.display = 'none';
+  $('#tut-spotlight').style.display = 'none';
+  $('#tut-tooltip').style.display = 'none';
+  $('#tut-complete').classList.add('active');
+
+  // DB에 완료 상태 저장 (로그인 상태일 때만)
+  if(!isDemo){
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if(user){
+        await supabase.from('profiles')
+          .update({ tutorial_owner_done: true })
+          .eq('user_id', user.id);
+      }
+    } catch(e){ console.warn('튜토리얼 완료 저장 실패', e); }
+  }
+}
+
+// ── 이벤트 ────────────────────────────
+$('#btn-next').addEventListener('click', ()=>{
+  if($('#btn-next').disabled) return;
+  nextStep();
+});
+$('#btn-prev').addEventListener('click', prevStep);
+$('#btn-skip').addEventListener('click', ()=>{
+  if(confirm('교육을 건너뛰시겠어요?\n설정에서 언제든지 다시 볼 수 있습니다.')) finish();
+});
+$('#btn-finish').addEventListener('click', ()=>{
+  if(isDemo) location.href = 'index.html';
+  else location.href = 'dashboard.html';
+});
+$('#btn-restart').addEventListener('click', ()=>{
+  location.reload();
+});
+
+// 모바일 메뉴
+$('#mobile-menu')?.addEventListener('click', ()=>{
+  $('#sidebar').classList.toggle('open');
+});
+
+// 사이드바 nav 클릭 시 강제 이동 막기 (튜토리얼 흐름 따라야)
+document.querySelectorAll('.nav-item').forEach(n=>{
+  n.addEventListener('click', (e)=>{
+    e.preventDefault();
+    // 튜토리얼 진행 중에는 강제 이동 안 함
+  });
+});
+
+// 리사이즈 시 재위치
+window.addEventListener('resize', ()=>{
+  if(currentStep > 0 && currentStep <= steps.length){
+    const step = steps[currentStep - 1];
+    if(step) positionSpotlight(step);
+  }
+});
+
+// 시작
+navigate('stores');
+setTimeout(()=>showStep(0), 300);
+</script>
+</body>
+</html>

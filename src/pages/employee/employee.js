@@ -88,6 +88,20 @@ function bindUI() {
 
   // 로그아웃
   $('#btn-logout')?.addEventListener('click', signOut);
+
+  // 튜토리얼 다시 보기
+  $('#btn-tutorial-restart')?.addEventListener('click', async () => {
+    try {
+      const { supabase } = await import('../../lib/supabase.js');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from('profiles').update({ tutorial_employee_done: false }).eq('id', user.id);
+      }
+      location.href = 'tutorial-employee.html';
+    } catch (e) {
+      location.href = 'tutorial-employee.html';
+    }
+  });
 }
 
 function startClock() {

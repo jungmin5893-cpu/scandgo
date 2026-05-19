@@ -48,11 +48,30 @@ export async function renderSettings({ root, profile }) {
     </div>
 
     <div class="card">
+      <div class="card-head"><h2>사용법 안내</h2></div>
+      <div style="padding:14px 18px">
+        <div style="font-size:13px;color:var(--gray4);margin-bottom:10px;line-height:1.6">
+          처음 가입 시 보셨던 사용법 안내를 다시 보실 수 있습니다.
+        </div>
+        <button class="btn primary" id="btn-tutorial-restart">🎓 사장님 튜토리얼 다시 보기</button>
+      </div>
+    </div>
+
+    <div class="card">
       <div class="card-head"><h2>위험 영역</h2></div>
       <button class="btn danger" id="btn-leave">사업장 탈퇴</button>
       <div class="muted" style="margin-top:8px">모든 데이터가 삭제됩니다. 복구 불가.</div>
     </div>
   `;
+
+  root.querySelector('#btn-tutorial-restart').addEventListener('click', async () => {
+    try {
+      await supabase.from('profiles').update({ tutorial_owner_done: false }).eq('id', profile.id);
+      location.href = 'tutorial-owner.html';
+    } catch (e) {
+      toast('이동 중 오류가 발생했습니다', 'error');
+    }
+  });
 
   root.querySelector('#form-tenant').addEventListener('submit', async (e) => {
     e.preventDefault();
