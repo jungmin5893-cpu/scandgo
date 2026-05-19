@@ -104,7 +104,7 @@ body{font-family:'Inter','Malgun Gothic','Apple SD Gothic Neo',sans-serif;backgr
 /* ════════════════════════════════════════════════════════════
    튜토리얼 오버레이
 ════════════════════════════════════════════════════════════ */
-.tut-overlay{position:fixed;inset:0;background:rgba(15,27,45,.62);z-index:9000;pointer-events:auto;backdrop-filter:blur(2px);}
+.tut-overlay{position:fixed;inset:0;background:rgba(15,27,45,.62);z-index:9000;pointer-events:auto;backdrop-filter:blur(2px);transition:opacity .35s;}
 .tut-spotlight{position:absolute;border-radius:10px;box-shadow:0 0 0 9999px rgba(15,27,45,.7),0 0 0 4px var(--green),0 0 30px rgba(0,201,167,.5);pointer-events:none;transition:all .35s cubic-bezier(.4,0,.2,1);z-index:9100;}
 .tut-tooltip{position:absolute;background:#fff;border-radius:14px;padding:20px 22px;max-width:340px;box-shadow:0 12px 40px rgba(0,0,0,.3);z-index:9200;transition:all .35s cubic-bezier(.4,0,.2,1);}
 .tut-tooltip .step-num{font-size:11px;font-weight:800;color:var(--green);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;}
@@ -360,7 +360,7 @@ function addStore(){
     const open = d.style.display !== 'none';
     d.style.display = open ? 'none' : 'block';
     document.querySelector('.store-chevron').textContent = open ? '▼' : '▲';
-    if(currentStep === 2) setTimeout(nextStep, 400);
+    if(currentStep === 2){ hideOverlay(); setTimeout(nextStep, 1800); }
   });
 
   // 스텝 진행
@@ -423,6 +423,8 @@ function showStep(idx){
   currentStep = idx + 1;
   const step = steps[idx];
   if(!step){ finish(); return; }
+
+  showOverlay();
 
   // 페이지 이동
   if(document.querySelector('.nav-item.active')?.dataset.route !== step.route){
@@ -522,6 +524,23 @@ async function finish(){
       }
     } catch(e){ console.warn('튜토리얼 완료 저장 실패', e); }
   }
+}
+
+// ── 오버레이 토글 ──────────────────────
+function hideOverlay(){
+  const ov = $('#tut-overlay');
+  ov.style.opacity = '0';
+  ov.style.pointerEvents = 'none';
+  $('#tut-spotlight').style.display = 'none';
+  $('#tut-tooltip').style.opacity = '0';
+  $('#tut-tooltip').style.pointerEvents = 'none';
+}
+function showOverlay(){
+  const ov = $('#tut-overlay');
+  ov.style.opacity = '1';
+  ov.style.pointerEvents = 'auto';
+  $('#tut-tooltip').style.opacity = '1';
+  $('#tut-tooltip').style.pointerEvents = 'auto';
 }
 
 // ── 이벤트 ────────────────────────────

@@ -83,7 +83,7 @@ body{font-family:'Inter','Malgun Gothic','Apple SD Gothic Neo',sans-serif;backgr
 /* ════════════════════════════════════════════════════════════
    튜토리얼 오버레이 (직원용)
 ════════════════════════════════════════════════════════════ */
-.tut-overlay{position:fixed;inset:0;background:rgba(15,27,45,.65);z-index:9000;backdrop-filter:blur(2px);}
+.tut-overlay{position:fixed;inset:0;background:rgba(15,27,45,.65);z-index:9000;backdrop-filter:blur(2px);transition:opacity .35s;}
 .tut-spotlight{position:absolute;border-radius:14px;box-shadow:0 0 0 9999px rgba(15,27,45,.72),0 0 0 4px var(--green),0 0 30px rgba(0,201,167,.5);pointer-events:none;transition:all .35s cubic-bezier(.4,0,.2,1);z-index:9100;}
 .tut-tooltip{position:absolute;background:#fff;border-radius:14px;padding:18px 20px;max-width:calc(100vw - 32px);left:16px;right:16px;box-shadow:0 12px 40px rgba(0,0,0,.3);z-index:9200;transition:all .35s cubic-bezier(.4,0,.2,1);}
 .tut-tooltip .step-num{font-size:11px;font-weight:800;color:var(--green);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;}
@@ -299,17 +299,36 @@ function simulateScan(onDone){
   }, 1600);
 }
 
+// ── 오버레이 토글 ──────────────────────
+function hideOverlay(){
+  const ov = $('#tut-overlay');
+  ov.style.opacity = '0';
+  ov.style.pointerEvents = 'none';
+  $('#tut-spotlight').style.display = 'none';
+  $('#tut-tooltip').style.opacity = '0';
+  $('#tut-tooltip').style.pointerEvents = 'none';
+}
+function showOverlay(){
+  const ov = $('#tut-overlay');
+  ov.style.opacity = '1';
+  ov.style.pointerEvents = 'auto';
+  $('#tut-tooltip').style.opacity = '1';
+  $('#tut-tooltip').style.pointerEvents = 'auto';
+}
+
 // ── 이벤트 ──
 $('#qr-btn').addEventListener('click', ()=>{
   if(state==='before'){
+    if(currentStep===2) hideOverlay();
     simulateScan(()=>{
       doCheckIn();
-      if(currentStep===2) setTimeout(()=>{ $('#success-view').classList.remove('active'); nextStep(); }, 1800);
+      if(currentStep===2) setTimeout(()=>{ $('#success-view').classList.remove('active'); nextStep(); }, 2200);
     });
   } else if(state==='working'){
+    if(currentStep===3) hideOverlay();
     simulateScan(()=>{
       doCheckOut();
-      if(currentStep===3) setTimeout(()=>{ $('#success-view').classList.remove('active'); nextStep(); }, 1800);
+      if(currentStep===3) setTimeout(()=>{ $('#success-view').classList.remove('active'); nextStep(); }, 2200);
     });
   }
 });
@@ -350,6 +369,8 @@ function showStep(idx){
   currentStep = idx + 1;
   const step = steps[idx];
   if(!step){ finish(); return; }
+
+  showOverlay();
 
   document.querySelectorAll('.tut-progress .dot').forEach((d,i)=>{
     d.classList.remove('active','done');
