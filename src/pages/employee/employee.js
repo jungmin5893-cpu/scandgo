@@ -213,11 +213,13 @@ async function loadMonthSummary() {
   else if (wageType === 'daily')   gross = wage * days.size;
   else                              gross = Math.floor((minutes / 60) * wage);
 
-  // 공제 적용
+  // 공제 적용 (월급은 고정액 그대로 표시)
   const RATE = { insurance: 0.094, freelancer: 0.033, none: 0 };
   const rate = RATE[profile.deduction_type] ?? 0.094;
-  const net  = Math.round(gross * (1 - rate));
+  const net  = wageType === 'monthly' ? gross : Math.round(gross * (1 - rate));
   $('#m-pay').textContent = net.toLocaleString();
+  const payLabel = document.querySelector('#m-pay')?.closest('.month-item')?.querySelector('.m-label');
+  if (payLabel) payLabel.textContent = wageType === 'monthly' ? '월급' : '예상 급여';
 }
 
 // ---------- QR 스캔 ----------
@@ -738,15 +740,23 @@ async function loadSalary() {
   const deductions = Math.round(gross * rate);
   const net        = gross - deductions;
 
-  $('#sal-amount').textContent = `${net.toLocaleString()}원`;
-  $('#sal-date').textContent   = `예상 실수령 · ${WLBL[wageType]} (정산 전)`;
-  $('#sal-rows').innerHTML = `
-    ${breakdown}
-    ${deductions > 0
-      ? `<div class="sal-row deduct"><span>${RLBL[deductionType]}</span><span>-${deductions.toLocaleString()}원</span></div>`
-      : `<div class="sal-row"><span>${RLBL[deductionType]}</span><span>없음</span></div>`}
-    <div class="sal-row total"><span>예상 실수령</span><span><strong>${net.toLocaleString()}원</strong></span></div>
-  `;
+  if (wageType === 'monthly') {
+    $('#sal-amount').textContent = `${gross.toLocaleString()}원`;
+    $('#sal-date').textContent   = '이번 달 월급 (고정)';
+    $('#sal-rows').innerHTML = `
+      <div class="sal-row"><span>월급 (고정)</span><span>${gross.toLocaleString()}원</span></div>
+    `;
+  } else {
+    $('#sal-amount').textContent = `${net.toLocaleString()}원`;
+    $('#sal-date').textContent   = `예상 실수령 · ${WLBL[wageType]} (정산 전)`;
+    $('#sal-rows').innerHTML = `
+      ${breakdown}
+      ${deductions > 0
+        ? `<div class="sal-row deduct"><span>${RLBL[deductionType]}</span><span>-${deductions.toLocaleString()}원</span></div>`
+        : `<div class="sal-row"><span>${RLBL[deductionType]}</span><span>없음</span></div>`}
+      <div class="sal-row total"><span>예상 실수령</span><span><strong>${net.toLocaleString()}원</strong></span></div>
+    `;
+  }
 }
 
 // ── 공지 메시지 모달 (출근 전 확인 필수) ───────────────────

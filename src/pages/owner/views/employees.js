@@ -182,7 +182,7 @@ async function loadEmployees(root, profile) {
     const wt  = r.wage_type || 'hourly';
     const amt = r.hourly_wage || 0;
     const meta = WAGE_META[wt] || WAGE_META.hourly;
-    const warnHtml = amt > 0 && amt < meta.min
+    const warnHtml = amt > 0 && amt < meta.min && wt !== 'monthly'
       ? `<span class="wage-warn" title="최저임금 미만 (${meta.min.toLocaleString()}${meta.unit})">⚠️</span>`
       : '';
     const ded = r.deduction_type || 'insurance';
@@ -277,9 +277,9 @@ async function loadEmployees(root, profile) {
         else if (f === 'store_id') updates[f] = el.value || null;  // 빈 문자열 → null
         else updates[f] = el.value;
       });
-      // 최저임금 미만 경고 확인
+      // 최저임금 미만 경고 확인 (월급은 제외)
       const meta = WAGE_META[updates.wage_type] || WAGE_META.hourly;
-      if (updates.hourly_wage > 0 && updates.hourly_wage < meta.min) {
+      if (updates.wage_type !== 'monthly' && updates.hourly_wage > 0 && updates.hourly_wage < meta.min) {
         const label = meta.label;
         if (!confirm(
           `${label} ${Number(updates.hourly_wage).toLocaleString()}원은 최저${label}(${meta.min.toLocaleString()}원)보다 낮습니다.\n그래도 저장할까요?`
@@ -315,7 +315,7 @@ function updateWageWarn(tr, amt, wt) {
   const wrap = tr.querySelector('.wage-wrap');
   let warn = wrap.querySelector('.wage-warn');
   const meta = WAGE_META[wt] || WAGE_META.hourly;
-  if (amt > 0 && amt < meta.min) {
+  if (amt > 0 && amt < meta.min && wt !== 'monthly') {
     if (!warn) {
       warn = document.createElement('span');
       warn.className = 'wage-warn';

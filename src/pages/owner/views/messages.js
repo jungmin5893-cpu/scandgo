@@ -178,7 +178,7 @@ export async function renderMessages({ root, profile }) {
         m.target_type === 'all'      ? '전체 직원' :
         m.target_type === 'store'    ? '현장별' : '개별 직원';
       const daysLabel = m.scheduled_date
-        ? `${m.scheduled_date} 발송예약`
+        ? `${m.scheduled_date.slice(5).replace('-', '/')} 발송예약`
         : '즉시 발송';
       const statusColor = m.active ? '#00c9a7' : '#8a94a6';
       const statusLabel = m.active ? '활성' : '비활성';
