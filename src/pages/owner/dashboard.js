@@ -14,6 +14,7 @@ import { renderSuperAdmin } from './views/superadmin.js';
 import { renderLeaves } from './views/leaves.js';
 import { renderContracts } from './views/contracts.js';
 import { renderAgency } from './views/agency.js';
+import { renderMessages } from './views/messages.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -34,6 +35,7 @@ const ROUTES = {
   leaves: renderLeaves,
   contracts: renderContracts,
   agency: renderAgency,
+  messages: renderMessages,
 };
 
 init();

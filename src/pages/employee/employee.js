@@ -312,6 +312,15 @@ async function handleQrPayload(raw) {
     }
   }
 
+  // 미확인 공지 메시지 확인
+  try {
+    const { data: msgs } = await supabase.rpc('get_unread_messages', { p_store_id: parsed.store });
+    if (msgs?.length) {
+      const ok = await showMessageModals(msgs);
+      if (!ok) return;
+    }
+  } catch {}
+
   const { data, error } = await supabase.rpc('check_in_or_out', {
     p_store: parsed.store,
     p_qr_secret: parsed.s,
@@ -738,4 +747,68 @@ async function loadSalary() {
       : `<div class="sal-row"><span>${RLBL[deductionType]}</span><span>없음</span></div>`}
     <div class="sal-row total"><span>예상 실수령</span><span><strong>${net.toLocaleString()}원</strong></span></div>
   `;
+}
+
+// ── 공지 메시지 모달 (출근 전 확인 필수) ───────────────────
+function showMessageModals(msgs) {
+  return new Promise(resolve => {
+    let idx = 0;
+
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+      position:fixed;inset:0;z-index:9999;
+      background:rgba(15,27,45,.85);
+      display:flex;align-items:center;justify-content:center;
+      padding:20px;
+    `;
+
+    const card = document.createElement('div');
+    card.style.cssText = `
+      background:#fff;border-radius:20px;
+      width:100%;max-width:400px;
+      box-shadow:0 20px 60px rgba(0,0,0,.4);
+      overflow:hidden;
+    `;
+
+    function render() {
+      const msg = msgs[idx];
+      const isLast = idx === msgs.length - 1;
+      card.innerHTML = `
+        <div style="background:linear-gradient(135deg,#0f1b2d,#1a2d45);padding:20px 22px 16px;color:#fff">
+          <div style="font-size:11px;font-weight:700;color:#00c9a7;letter-spacing:1px;margin-bottom:6px">
+            📢 사장님 공지 · ${idx + 1}/${msgs.length}
+          </div>
+          <div style="font-size:18px;font-weight:800;line-height:1.3">${msg.title}</div>
+        </div>
+        <div style="padding:20px 22px">
+          <div style="font-size:15px;color:#1a2d45;line-height:1.7;white-space:pre-wrap;margin-bottom:24px">${msg.body}</div>
+          <button id="msg-confirm-btn" style="
+            width:100%;padding:14px;
+            background:linear-gradient(135deg,#00c9a7,#00b096);
+            color:#fff;border:none;border-radius:12px;
+            font-size:15px;font-weight:800;cursor:pointer;
+            font-family:inherit;
+          ">네, 확인하였습니다</button>
+        </div>
+      `;
+
+      card.querySelector('#msg-confirm-btn').addEventListener('click', async () => {
+        try {
+          await supabase.rpc('mark_message_read', { p_message_id: msg.id });
+        } catch {}
+
+        if (isLast) {
+          overlay.remove();
+          resolve(true);
+        } else {
+          idx++;
+          render();
+        }
+      });
+    }
+
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+    render();
+  });
 }
