@@ -360,6 +360,7 @@ function addStore(){
     const open = d.style.display !== 'none';
     d.style.display = open ? 'none' : 'block';
     document.querySelector('.store-chevron').textContent = open ? '▼' : '▲';
+    if(currentStep === 2) setTimeout(nextStep, 400);
   });
 
   // 스텝 진행
