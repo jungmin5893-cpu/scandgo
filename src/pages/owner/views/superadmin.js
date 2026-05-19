@@ -108,25 +108,22 @@ function renderRow(t) {
 }
 
 async function handleExtend(root, tenantId, currentEndDate) {
-  const base = currentEndDate
-    ? new Date(Math.max(new Date(currentEndDate).getTime(), Date.now()))
-    : new Date();
-  base.setDate(base.getDate() + 30);
-
-  const { error } = await supabase.from('tenants')
-    .update({ trial_ends_at: base.toISOString(), subscription_status: 'trialing' })
-    .eq('id', tenantId);
+  // RPC로 RLS 우회 — 다른 테넌트도 업데이트 가능
+  const { error } = await supabase.rpc('extend_tenant_trial', {
+    p_tenant_id: tenantId,
+    p_days: 30,
+  });
 
   if (error) { toast(error.message, 'error'); return; }
-  toast('트라이얼 30일 연장 완료', 'success');
+  toast('트라이얼 30일 연장 완료 ✓', 'success');
   await loadTenants(root);
 }
 
 async function handleExpire(root, tenantId) {
   if (!confirm('해당 가입자의 트라이얼을 즉시 만료시키겠습니까?')) return;
-  const { error } = await supabase.from('tenants')
-    .update({ trial_ends_at: new Date().toISOString() })
-    .eq('id', tenantId);
+  const { error } = await supabase.rpc('expire_tenant_trial', {
+    p_tenant_id: tenantId,
+  });
 
   if (error) { toast(error.message, 'error'); return; }
   toast('만료 처리 완료', 'success');
