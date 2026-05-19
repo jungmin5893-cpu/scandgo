@@ -16,6 +16,8 @@ export default defineConfig({
         employee: resolve(__dirname, 'employee.html'),
         terms: resolve(__dirname, 'terms.html'),
         privacy: resolve(__dirname, 'privacy.html'),
+        tutorialOwner: resolve(__dirname, 'tutorial-owner.html'),
+        tutorialEmployee: resolve(__dirname, 'tutorial-employee.html'),
       },
     },
   },
