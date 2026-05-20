@@ -130,9 +130,10 @@ export async function renderMessages({ root, profile }) {
     const day   = $('#msg-day', root).value;
     let scheduledDate = null;
     if (month && day) {
-      const now = new Date();
-      let year = now.getFullYear();
-      if (new Date(`${year}-${month}-${day}`) < now) year++;
+      // 한국 시간 기준 오늘 날짜(YYYY-MM-DD)와 문자열 비교
+      const todayKst = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' });
+      let year = new Date().getFullYear();
+      if (`${year}-${month}-${day}` < todayKst) year++;
       scheduledDate = `${year}-${month}-${day}`;
     }
     const targetId = $('#target-select', root).value;
