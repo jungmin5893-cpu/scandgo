@@ -74,8 +74,20 @@ export async function renderOverview({ root, profile }) {
 
 async function setupPushBanner(root, profile) {
   if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+
   const already = await isPushSubscribed();
-  if (already || Notification.permission === 'denied') return;
+  if (already) return;
+
+  // 이미 허용했으면 배너 없이 조용히 재구독
+  if (Notification.permission === 'granted') {
+    await subscribePush(profile.id, profile.tenant_id);
+    return;
+  }
+
+  // 차단이거나 "나중에" 선택 후 하루 안 지났으면 스킵
+  if (Notification.permission === 'denied') return;
+  const snoozedUntil = localStorage.getItem('push_snooze');
+  if (snoozedUntil && Date.now() < Number(snoozedUntil)) return;
 
   // 배너 삽입 (페이지 상단)
   const banner = document.createElement('div');
@@ -93,13 +105,18 @@ async function setupPushBanner(root, profile) {
     const perm = await Notification.requestPermission();
     if (perm === 'granted') {
       await subscribePush(profile.id, profile.tenant_id);
+      localStorage.removeItem('push_snooze');
       banner.innerHTML = '✅ 알림이 활성화됐습니다.';
       setTimeout(() => banner.remove(), 2500);
     } else {
       banner.remove();
     }
   });
-  root.querySelector('#push-deny').addEventListener('click', () => banner.remove());
+  root.querySelector('#push-deny').addEventListener('click', () => {
+    // 24시간 후까지 배너 숨김
+    localStorage.setItem('push_snooze', String(Date.now() + 24 * 60 * 60 * 1000));
+    banner.remove();
+  });
 }
 
 async function loadKpi(root, profile) {
