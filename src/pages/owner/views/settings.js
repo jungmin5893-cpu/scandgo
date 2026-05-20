@@ -1,6 +1,7 @@
 import { supabase } from '../../../lib/supabase.js';
 import { toast } from '../../../lib/toast.js';
 import { calcMonthlyFee } from '../../../lib/labels.js';
+import { subscribePush, unsubscribePush, isPushSubscribed } from '../../../lib/push.js';
 
 export async function renderSettings({ root, profile }) {
   const t = profile.tenants || {};
@@ -48,6 +49,19 @@ export async function renderSettings({ root, profile }) {
     </div>
 
     <div class="card">
+      <div class="card-head"><h2>알림 설정</h2></div>
+      <div style="padding:14px 18px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+          <div>
+            <div style="font-size:14px;font-weight:600;color:var(--text)">직원 출퇴근 푸시 알림</div>
+            <div style="font-size:12px;color:var(--gray4);margin-top:3px" id="push-status-label">확인 중…</div>
+          </div>
+          <button class="btn" id="btn-push-toggle" style="min-width:80px">확인 중</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
       <div class="card-head"><h2>사용법 안내</h2></div>
       <div style="padding:14px 18px">
         <div style="font-size:13px;color:var(--gray4);margin-bottom:10px;line-height:1.6">
@@ -63,6 +77,64 @@ export async function renderSettings({ root, profile }) {
       <div class="muted" style="margin-top:8px">모든 데이터가 삭제됩니다. 복구 불가.</div>
     </div>
   `;
+
+  // 푸시 알림 토글
+  (async () => {
+    const label = root.querySelector('#push-status-label');
+    const btn   = root.querySelector('#btn-push-toggle');
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+      label.textContent = '이 브라우저는 푸시 알림을 지원하지 않습니다';
+      btn.style.display = 'none';
+      return;
+    }
+    if (Notification.permission === 'denied') {
+      label.textContent = '브라우저에서 알림이 차단됐습니다. 브라우저 설정에서 직접 허용해주세요.';
+      btn.style.display = 'none';
+      return;
+    }
+
+    async function refreshPushUI() {
+      const subscribed = await isPushSubscribed();
+      if (subscribed) {
+        label.textContent = '활성화됨 — 직원 출퇴근 시 알림을 받습니다';
+        label.style.color = '#00c9a7';
+        btn.textContent = '알림 끄기';
+        btn.className = 'btn';
+      } else {
+        label.textContent = '비활성화됨';
+        label.style.color = '';
+        btn.textContent = '알림 켜기';
+        btn.className = 'btn primary';
+      }
+    }
+
+    await refreshPushUI();
+
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      const subscribed = await isPushSubscribed();
+      if (subscribed) {
+        await unsubscribePush(profile.id);
+        localStorage.setItem('push_banner_decided', '1');
+        toast('푸시 알림을 껐습니다', 'info');
+      } else {
+        const perm = Notification.permission === 'granted'
+          ? 'granted'
+          : await Notification.requestPermission();
+        if (perm === 'granted') {
+          await subscribePush(profile.id, profile.tenants?.id);
+          localStorage.setItem('push_banner_decided', '1');
+          toast('푸시 알림을 켰습니다', 'success');
+        } else {
+          toast('알림 권한이 거부됐습니다. 브라우저 설정을 확인해주세요.', 'error');
+          btn.disabled = false;
+          return;
+        }
+      }
+      await refreshPushUI();
+      btn.disabled = false;
+    });
+  })();
 
   root.querySelector('#btn-tutorial-restart').addEventListener('click', async () => {
     try {
