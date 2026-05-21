@@ -438,6 +438,12 @@ function showStep(idx){
     else if(i+1 === currentStep) d.classList.add('active');
   });
 
+  // 대상 요소가 화면 밖이면 먼저 스크롤
+  const targetEl = document.querySelector(step.targetSel);
+  if (targetEl) {
+    targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
   setTimeout(()=>{
     positionSpotlight(step);
     $('#step-num').textContent = `단계 ${currentStep} / ${steps.length}`;
@@ -447,7 +453,7 @@ function showStep(idx){
     $('#btn-next').textContent = step.nextLabel || (step.waitClick ? '클릭 대기 중...' : '다음 →');
     $('#btn-next').disabled = !!step.waitClick;
     $('#btn-next').style.opacity = step.waitClick ? '.4' : '1';
-  }, 150);
+  }, targetEl ? 420 : 150); // 스크롤 애니메이션 완료 대기
 }
 
 function positionSpotlight(step){
@@ -468,10 +474,13 @@ function positionSpotlight(step){
 
   // 툴팁 위치
   const tt = $('#tut-tooltip');
-  const ttRect = tt.getBoundingClientRect();
+  const ttH = 240; // 툴팁 예상 높이
   let top = rect.bottom + 16;
   let left = rect.left;
-  if(top + 220 > window.innerHeight) top = rect.top - 220;
+  // 아래 공간 부족하면 위에 배치
+  if(top + ttH > window.innerHeight) top = Math.max(16, rect.top - ttH - 12);
+  // 위아래 모두 부족하면 화면 하단 고정
+  if(top < 16) top = window.innerHeight - ttH - 16;
   if(left + 360 > window.innerWidth) left = window.innerWidth - 360 - 16;
   if(left < 16) left = 16;
   tt.style.top = top + 'px';
