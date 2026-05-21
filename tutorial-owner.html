@@ -438,13 +438,12 @@ function showStep(idx){
     else if(i+1 === currentStep) d.classList.add('active');
   });
 
-  // 대상 요소가 화면 밖이면 먼저 스크롤
-  const targetEl = document.querySelector(step.targetSel);
-  if (targetEl) {
-    targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
-
   setTimeout(()=>{
+    // 브라우저 레이아웃 확정 후 즉시 스크롤 → 바로 스포트라이트 배치
+    const targetEl = document.querySelector(step.targetSel);
+    if (targetEl) {
+      targetEl.scrollIntoView({ behavior: 'instant', block: 'center' });
+    }
     positionSpotlight(step);
     $('#step-num').textContent = `단계 ${currentStep} / ${steps.length}`;
     $('#step-title').textContent = step.title;
@@ -453,7 +452,7 @@ function showStep(idx){
     $('#btn-next').textContent = step.nextLabel || (step.waitClick ? '클릭 대기 중...' : '다음 →');
     $('#btn-next').disabled = !!step.waitClick;
     $('#btn-next').style.opacity = step.waitClick ? '.4' : '1';
-  }, targetEl ? 420 : 150); // 스크롤 애니메이션 완료 대기
+  }, 150);
 }
 
 function positionSpotlight(step){
@@ -586,7 +585,11 @@ document.querySelectorAll('.nav-item').forEach(n=>{
 window.addEventListener('resize', ()=>{
   if(currentStep > 0 && currentStep <= steps.length){
     const step = steps[currentStep - 1];
-    if(step) positionSpotlight(step);
+    if(step){
+      const el = document.querySelector(step.targetSel);
+      if(el) el.scrollIntoView({ behavior:'instant', block:'center' });
+      positionSpotlight(step);
+    }
   }
 });
 
