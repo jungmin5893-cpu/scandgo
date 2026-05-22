@@ -1,0 +1,32 @@
+name: 📦 주간 자동 백업
+
+on:
+  schedule:
+    # 매주 월요일 오전 9시 (KST) = UTC 일요일 00:00
+    - cron: '0 0 * * 0'
+  # 수동 실행 버튼도 활성화
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # 태그 생성 권한
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # 전체 히스토리
+
+      - name: 백업 태그 생성
+        run: |
+          DATE=$(TZ=Asia/Seoul date +%Y-%m-%d)
+          TAG="backup/${DATE}"
+
+          # 같은 날 태그가 이미 있으면 덮어씀
+          git tag -f "${TAG}"
+          git push origin "${TAG}" --force
+
+          echo "✅ 백업 태그 생성: ${TAG}"
+          echo "🔗 https://github.com/${{ github.repository }}/releases/tag/${TAG}"
