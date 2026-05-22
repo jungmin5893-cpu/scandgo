@@ -4,6 +4,7 @@ import { kst, fmt, fmtDate, fmtTime, minutesToHm, diffMinutes, nowKst } from '..
 import { toast } from '../../lib/toast.js';
 import { initOfflineBar, getGpsPosition, gpsDistance } from '../../lib/network.js';
 import { subscribePush } from '../../lib/push.js';
+import { escapeHtml } from '../../lib/utils.js';
 import QrScanner from 'qr-scanner';
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -46,7 +47,12 @@ function bindUI() {
 
   // 스캔 종료
   $('#scan-cancel').addEventListener('click', stopScan);
-  $('#scan-manual').addEventListener('click', manualEntry);
+  // 수동 입력 — 개발 환경에서만 활성화 (프로덕션 보안)
+  if (import.meta.env.DEV) {
+    $('#scan-manual')?.addEventListener('click', manualEntry);
+  } else {
+    $('#scan-manual')?.style && ($('#scan-manual').style.display = 'none');
+  }
 
   // 성공 화면 확인
   $('#success-ok').addEventListener('click', () => {
@@ -191,10 +197,10 @@ function recordRow(kind, title, time, storeName, shiftName) {
   div.innerHTML = `
     <div class="rec-icon ${kind}">${kind === 'in' ? '✅' : '🚪'}</div>
     <div class="rec-info">
-      <div class="rec-title">${title}</div>
-      <div class="rec-sub">${storeName || '매장'} · ${shiftName || ''}</div>
+      <div class="rec-title">${escapeHtml(title)}</div>
+      <div class="rec-sub">${escapeHtml(storeName || '매장')} · ${escapeHtml(shiftName || '')}</div>
     </div>
-    <div class="rec-time ${kind}">${time}</div>
+    <div class="rec-time ${kind}">${escapeHtml(time)}</div>
   `;
   return div;
 }
@@ -440,10 +446,10 @@ async function loadHistory() {
     div.innerHTML = `
       <div class="rec-icon in">⏱</div>
       <div class="rec-info">
-        <div class="rec-title">${fmtTime(r.check_in_at)} ~ ${r.check_out_at ? fmtTime(r.check_out_at) : '진행 중'}</div>
-        <div class="rec-sub">${r.store?.name || '매장'} · ${r.shift?.name || ''}</div>
+        <div class="rec-title">${escapeHtml(fmtTime(r.check_in_at))} ~ ${r.check_out_at ? escapeHtml(fmtTime(r.check_out_at)) : '진행 중'}</div>
+        <div class="rec-sub">${escapeHtml(r.store?.name || '매장')} · ${escapeHtml(r.shift?.name || '')}</div>
       </div>
-      <div class="rec-time in">${min ? minutesToHm(min) : '-'}</div>
+      <div class="rec-time in">${min ? escapeHtml(minutesToHm(min)) : '-'}</div>
     `;
     list.appendChild(div);
   }
@@ -526,8 +532,8 @@ async function loadLeave() {
         <div class="leave-info">
           <div class="l-type">${r.leave_type} <span style="font-size:12px;color:#64748b;font-weight:500">(${r.days}일)</span></div>
           <div class="l-date">${dateStr}</div>
-          ${r.reason ? `<div class="l-reason">${r.reason}</div>` : ''}
-          ${r.reject_reason ? `<div class="l-reason" style="color:#dc2626">반려 사유: ${r.reject_reason}</div>` : ''}
+          ${r.reason ? `<div class="l-reason">${escapeHtml(r.reason)}</div>` : ''}
+          ${r.reject_reason ? `<div class="l-reason" style="color:#dc2626">반려 사유: ${escapeHtml(r.reject_reason)}</div>` : ''}
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
           <span class="leave-badge ${r.status}">${statusLabel[r.status] || r.status}</span>
@@ -604,8 +610,9 @@ async function openContractDetail(id) {
   const typeLabel = { regular: '정규직 (기간 정함 없음)', fixed: '계약직 (기간제)', parttime: '단시간 근로자' };
   const period    = c.end_date ? `${c.start_date} ~ ${c.end_date}` : `${c.start_date}부터 (기간 정함 없음)`;
 
+  // label은 하드코딩 상수이므로 안전, value만 이스케이프
   const row = (label, value) =>
-    `<div class="contract-row"><span>${label}</span><span>${value}</span></div>`;
+    `<div class="contract-row"><span>${label}</span><span>${escapeHtml(value)}</span></div>`;
 
   const canSign = c.status === 'sent' && !c.employee_signed_at;
 
@@ -639,12 +646,12 @@ async function openContractDetail(id) {
     <div class="sign-section">
       <div class="sign-box">
         <div class="s-label">사용자 서명</div>
-        <div class="s-name">${c.owner_name || '-'} (인)</div>
+        <div class="s-name">${escapeHtml(c.owner_name || '-')} (인)</div>
         <div class="s-date">${c.owner_signed_at ? new Date(c.owner_signed_at).toLocaleDateString('ko-KR') : '미서명'}</div>
       </div>
       <div class="sign-box">
         <div class="s-label">근로자 서명</div>
-        <div class="s-name">${profile.name} (인)</div>
+        <div class="s-name">${escapeHtml(profile.name)} (인)</div>
         <div class="s-date">${c.employee_signed_at ? new Date(c.employee_signed_at).toLocaleDateString('ko-KR') + ' 서명 완료' : '아직 서명하지 않았습니다'}</div>
       </div>
       ${canSign ? `
@@ -665,13 +672,11 @@ async function openContractDetail(id) {
       if (!confirm(`"${profile.name}"(으)로 전자서명하시겠습니까?\n서명 후에는 취소할 수 없습니다.`)) return;
       signBtn.disabled = true;
       signBtn.textContent = '서명 중…';
-      const now = new Date().toISOString();
-      const { error: se } = await supabase.from('labor_contracts').update({
-        employee_name:      profile.name,
-        employee_signed_at: now,
-        status:             'completed',
-        updated_at:         now,
-      }).eq('id', signBtn.dataset.id);
+      // ★ 보안: 직접 UPDATE 대신 서버 함수 사용 (임금 등 다른 컬럼 수정 불가)
+      const { error: se } = await supabase.rpc('sign_labor_contract', {
+        p_contract_id:   signBtn.dataset.id,
+        p_employee_name: profile.name,
+      });
       if (se) { toast(se.message, 'error'); signBtn.disabled = false; signBtn.textContent = '✍️ 서명하기'; return; }
       toast('서명이 완료됐습니다! 계약서가 효력을 발생합니다.', 'success', 4000);
       $('#contract-detail-modal').classList.remove('active');
@@ -802,10 +807,10 @@ function showMessageModals(msgs) {
           <div style="font-size:11px;font-weight:700;color:#00c9a7;letter-spacing:1px;margin-bottom:6px">
             📢 사장님 공지 · ${idx + 1}/${msgs.length}
           </div>
-          <div style="font-size:18px;font-weight:800;line-height:1.3">${msg.title}</div>
+          <div style="font-size:18px;font-weight:800;line-height:1.3">${escapeHtml(msg.title)}</div>
         </div>
         <div style="padding:20px 22px">
-          <div style="font-size:15px;color:#1a2d45;line-height:1.7;white-space:pre-wrap;margin-bottom:24px">${msg.body}</div>
+          <div style="font-size:15px;color:#1a2d45;line-height:1.7;white-space:pre-wrap;margin-bottom:24px">${escapeHtml(msg.body)}</div>
           <button id="msg-confirm-btn" style="
             width:100%;padding:14px;
             background:linear-gradient(135deg,#00c9a7,#00b096);

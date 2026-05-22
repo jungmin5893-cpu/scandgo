@@ -145,7 +145,25 @@ async function redirectIfLoggedIn() {
   const profile = await getMyProfile();
   if (profile?.role) location.href = routeAfterAuth(profile);
 }
-redirectIfLoggedIn();
+redirectIfLoggedIn().then(() => {
+  // ★ URL에 초대 코드가 있으면 직원 가입 화면으로 자동 진입 + 코드 자동 입력
+  const params = new URLSearchParams(location.search);
+  const inviteCode  = params.get('code');
+  const invitePhone = params.get('phone');
+  if (!inviteCode) return;
+
+  showPanel('employeeSignup');
+  // DOM이 paint된 뒤 입력
+  requestAnimationFrame(() => {
+    const codeEl  = $('#emp-code');
+    const phoneEl = $('#emp-phone');
+    if (codeEl)  codeEl.value  = inviteCode;
+    if (phoneEl && invitePhone) phoneEl.value = decodeURIComponent(invitePhone);
+    // 코드 필드 강조
+    codeEl?.classList.add('highlight-field');
+    setTimeout(() => codeEl?.classList.remove('highlight-field'), 2000);
+  });
+});
 
 // ── 비밀번호 찾기 링크 ────────────────────────────
 $('#link-forgot-pw')?.addEventListener('click', (e) => {

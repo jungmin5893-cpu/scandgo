@@ -1,5 +1,6 @@
 import { supabase } from '../../../lib/supabase.js';
 import { toast } from '../../../lib/toast.js';
+import { escapeHtml } from '../../../lib/utils.js';
 
 // ─────────────────────────────────────────────────────────────
 // 슈퍼어드민 패널 — 전체 가입자 트라이얼 관리
@@ -87,13 +88,13 @@ function renderRow(t) {
 
   return `
     <tr>
-      <td style="font-weight:700">${t.name || '(미설정)'}</td>
+      <td style="font-weight:700">${escapeHtml(t.name || '(미설정)')}</td>
       <td>
-        <div style="font-size:13px">${t.owner_name || '—'}</div>
-        <div style="font-size:11px;color:#64748b">${t.owner_email || '—'}</div>
+        <div style="font-size:13px">${escapeHtml(t.owner_name || '—')}</div>
+        <div style="font-size:11px;color:#64748b">${escapeHtml(t.owner_email || '—')}</div>
       </td>
-      <td style="font-size:12px;color:#8a94a6">${t.industry_type || '—'}</td>
-      <td><span class="sub-status ${statusClass[t.subscription_status] || ''}" style="font-weight:700;font-size:13px">${statusLabel[t.subscription_status] || t.subscription_status}</span></td>
+      <td style="font-size:12px;color:#8a94a6">${escapeHtml(t.industry_type || '—')}</td>
+      <td><span class="sub-status ${statusClass[t.subscription_status] || ''}" style="font-weight:700;font-size:13px">${escapeHtml(statusLabel[t.subscription_status] || t.subscription_status)}</span></td>
       <td>${endDateStr}${daysTag}</td>
       <td style="text-align:center;font-weight:700">${t.peak_employee_count ?? 0}명</td>
       <td style="font-size:12px;color:#8a94a6">${createdStr}</td>

@@ -91,9 +91,9 @@ export async function renderEmployees({ root, profile }) {
     btn.disabled = false;
     btn.textContent = '가입 코드 발급';
     if (error) { toast(error.message, 'error'); return; }
-    toast(`가입 코드: ${code}\n${phone}로 전달해주세요`, 'success', 5000);
     e.target.reset();
     await loadInvites(root, profile);
+    showInviteShareCard(root, { code, phone, name });
   });
 }
 
@@ -309,6 +309,70 @@ async function loadEmployees(root, profile) {
       await loadEmployees(root, profile);
     });
   });
+}
+
+// ─────────────────────────────────────────────────────────────
+// ★ 초대 코드 공유 카드 — 링크 클릭 시 코드 자동 입력
+// ─────────────────────────────────────────────────────────────
+function showInviteShareCard(root, { code, phone, name }) {
+  // 로그인 페이지 URL 동적 생성 (배포 환경 대응)
+  const base = location.origin + location.pathname.replace(/dashboard\.html.*$/, '') + 'login.html';
+  const shareUrl  = `${base}?code=${code}&phone=${encodeURIComponent(phone.replace(/[^0-9]/g, ''))}`;
+  const shareText = `[SCAN&GO] 출퇴근 앱 가입 초대 🎉\n\n아래 링크를 눌러 가입해주세요 👇\n${shareUrl}\n\n📌 가입코드: ${code}\n⏰ 7일 이내 사용 가능`;
+
+  // 카드를 폼 바로 아래에 삽입 (이미 있으면 재사용)
+  let card = root.querySelector('#invite-share-card');
+  if (!card) {
+    card = document.createElement('div');
+    card.id = 'invite-share-card';
+    root.querySelector('#form-invite').insertAdjacentElement('afterend', card);
+  }
+  card.style.cssText = `
+    padding:16px 20px 20px;
+    background:linear-gradient(135deg,rgba(0,201,167,.07),rgba(184,147,90,.05));
+    border-top:2px solid rgba(0,201,167,.25);
+    animation:fadeInDown .3s ease;
+  `;
+  card.innerHTML = `
+    <div style="font-size:12px;color:#059669;font-weight:700;margin-bottom:10px">
+      ✅ ${name ? `${name}(${phone})` : phone} 가입 코드 발급 완료
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;background:#fff;
+         border:1px solid rgba(0,201,167,.3);border-radius:10px;padding:12px 16px;margin-bottom:12px">
+      <span style="font-size:30px;font-weight:900;letter-spacing:8px;
+           color:#0f2942;font-family:'Courier New',monospace">${code}</span>
+      <span style="font-size:11px;color:#8a94a6">가입코드</span>
+    </div>
+    <p style="font-size:12px;color:#64748b;margin:0 0 10px;line-height:1.6">
+      아래 버튼으로 직원에게 링크를 보내세요.<br>
+      <b>링크를 누르면 코드가 자동 입력</b>되어 바로 가입할 수 있습니다.
+    </p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button id="btn-invite-copy" class="btn small primary" style="flex:1;min-width:120px">🔗 링크 복사</button>
+      ${navigator.share ? `<button id="btn-invite-share" class="btn small" style="flex:1;min-width:120px">📤 카카오·문자 공유</button>` : ''}
+    </div>
+  `;
+
+  // 링크 복사
+  card.querySelector('#btn-invite-copy').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(shareUrl); }
+    catch {
+      const el = document.createElement('textarea');
+      el.value = shareUrl;
+      el.style.cssText = 'position:fixed;opacity:0;pointer-events:none';
+      document.body.appendChild(el); el.select(); document.execCommand('copy'); el.remove();
+    }
+    import('../../../lib/toast.js').then(({ toast }) =>
+      toast('링크 복사됨! 직원에게 카카오·문자로 붙여넣기 해주세요 📋', 'success', 4000)
+    );
+  });
+
+  // 네이티브 공유 (카카오톡·문자·기타)
+  if (navigator.share) {
+    card.querySelector('#btn-invite-share')?.addEventListener('click', () => {
+      navigator.share({ title: 'SCAN&GO 가입 초대', text: shareText }).catch(() => {});
+    });
+  }
 }
 
 function updateWageWarn(tr, amt, wt) {
