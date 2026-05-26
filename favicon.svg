@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Navy background -->
+  <rect width="32" height="32" rx="7" fill="#0f1b2d"/>
+  <!-- Top-left finder square -->
+  <rect x="5" y="5" width="9" height="9" rx="1.5" fill="none" stroke="#00c9a7" stroke-width="1.4"/>
+  <rect x="7.2" y="7.2" width="4.6" height="4.6" rx=".8" fill="#00c9a7"/>
+  <!-- Top-right finder square -->
+  <rect x="18" y="5" width="9" height="9" rx="1.5" fill="none" stroke="#00c9a7" stroke-width="1.4"/>
+  <rect x="20.2" y="7.2" width="4.6" height="4.6" rx=".8" fill="#00c9a7"/>
+  <!-- Bottom-left finder square -->
+  <rect x="5" y="18" width="9" height="9" rx="1.5" fill="none" stroke="#00c9a7" stroke-width="1.4"/>
+  <rect x="7.2" y="20.2" width="4.6" height="4.6" rx=".8" fill="#00c9a7"/>
+  <!-- Bottom-right data dots -->
+  <rect x="18" y="18" width="4" height="4" rx=".8" fill="#00c9a7"/>
+  <rect x="23" y="18" width="4" height="4" rx=".8" fill="#00c9a7" opacity=".45"/>
+  <rect x="18" y="23" width="4" height="4" rx=".8" fill="#00c9a7" opacity=".45"/>
+  <rect x="23" y="23" width="4" height="4" rx=".8" fill="#00c9a7"/>
+</svg>
