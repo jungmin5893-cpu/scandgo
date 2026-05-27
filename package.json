@@ -13,6 +13,7 @@
     "supabase:reset": "supabase db reset",
     "cap:sync": "npm run build && npx cap sync android",
     "cap:open": "npx cap open android",
+    "gen:icon": "node generate-icon.mjs",
     "cap:icons": "npx @capacitor/assets generate --android --iconBackgroundColor #0f1b2d --iconBackgroundColorDark #0f1b2d --splashBackgroundColor #0f1b2d --splashBackgroundColorDark #0f1b2d"
   },
   "dependencies": {
