@@ -10,9 +10,18 @@
     "preview": "vite preview --host",
     "supabase:start": "supabase start",
     "supabase:push": "supabase db push",
-    "supabase:reset": "supabase db reset"
+    "supabase:reset": "supabase db reset",
+    "cap:sync": "npm run build && npx cap sync android",
+    "cap:open": "npx cap open android",
+    "cap:icons": "npx @capacitor/assets generate --android --iconBackgroundColor #0f1b2d --iconBackgroundColorDark #0f1b2d --splashBackgroundColor #0f1b2d --splashBackgroundColorDark #0f1b2d"
   },
   "dependencies": {
+    "@capacitor/android": "^8.3.4",
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/cli": "^8.3.4",
+    "@capacitor/core": "^8.3.4",
+    "@capacitor/splash-screen": "^8.0.1",
+    "@capacitor/status-bar": "^8.0.2",
     "@supabase/supabase-js": "^2.45.0",
     "dayjs": "^1.11.13",
     "playwright": "^1.60.0",
@@ -20,6 +29,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "vite": "^5.4.0",
     "vite-plugin-pwa": "^0.20.0",
     "workbox-window": "^7.1.0"

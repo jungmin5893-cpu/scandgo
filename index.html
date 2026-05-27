@@ -1025,6 +1025,11 @@ footer a:hover { color:rgba(255,255,255,.65); }
 </div>
 
 <script>
+// Capacitor 앱 안에서 열린 경우 랜딩페이지 건너뛰고 로그인으로
+if (window.Capacitor || navigator.userAgent.includes('wv') && !navigator.userAgent.includes('Chrome/')) {
+  window.location.replace('login.html');
+}
+
 function openModal(type) { window.location.href = 'login.html'; }
 function closeModal(type) {
   document.getElementById('modal-'+type).classList.remove('active');

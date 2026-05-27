@@ -1,0 +1,28 @@
+{
+  "appId": "com.scandgo.app",
+  "appName": "SCANDGO",
+  "webDir": "dist",
+  "server": {
+    "url": "https://scandgo.com",
+    "cleartext": false,
+    "allowNavigation": [
+      "*.supabase.co",
+      "*.supabase.in",
+      "fonts.googleapis.com",
+      "images.unsplash.com"
+    ]
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1800,
+      "launchAutoHide": true,
+      "backgroundColor": "#0f1b2d",
+      "showSpinner": false,
+      "spinnerColor": "#00c9a7"
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#0f1b2d"
+    }
+  }
+}
