@@ -34,7 +34,7 @@ body{font-family:'Inter','Malgun Gothic','Apple SD Gothic Neo',sans-serif;backgr
 /* ── 사이드바 ── */
 .sidebar{width:220px;background:var(--navy);color:#fff;display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;}
 .side-head{padding:20px 18px 14px;border-bottom:1px solid rgba(255,255,255,.08);}
-.side-head .logo{font-size:20px;font-weight:900;letter-spacing:3px;color:#fff;}
+.side-head .logo{font-size:20px;font-weight:900;letter-spacing:3px;color:#fff;display:flex;align-items:center;gap:8px;}
 .side-head .logo span{color:var(--gold);}
 .side-head .biz{font-size:12px;color:rgba(255,255,255,.5);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .trial-badge{display:none;margin:8px 18px 0;padding:5px 10px;background:rgba(184,147,90,.2);border:1px solid rgba(184,147,90,.4);border-radius:4px;font-size:11px;font-weight:700;text-align:center;color:var(--gold);}
@@ -64,7 +64,7 @@ body{font-family:'Inter','Malgun Gothic','Apple SD Gothic Neo',sans-serif;backgr
 /* ── 메인 영역 ── */
 .main{flex:1;display:flex;flex-direction:column;overflow:auto;min-width:0;}
 .topbar{display:none;background:var(--white);border-bottom:1px solid var(--gray2);padding:12px 16px;align-items:center;gap:12px;position:sticky;top:0;z-index:10;}
-.topbar .logo{font-size:16px;font-weight:900;letter-spacing:2px;}
+.topbar .logo{font-size:16px;font-weight:900;letter-spacing:2px;display:flex;align-items:center;gap:8px;}
 .topbar .logo span{color:var(--green);}
 .mobile-menu{background:none;border:none;font-size:22px;cursor:pointer;padding:2px 6px;border-radius:6px;color:var(--dark);}
 .mobile-menu:hover{background:var(--gray1);}
@@ -362,7 +362,16 @@ select.cell-edit{cursor:pointer;}
 <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
 <aside class="sidebar" id="sidebar">
   <div class="side-head">
-    <div class="logo">SCAN<span>&amp;GO</span></div>
+    <div class="logo">
+      <svg width="20" height="20" viewBox="0 0 28 28" fill="none">
+        <path d="M4 10.5 L4 4 L10.5 4" stroke="#00c9a7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M17.5 4 L24 4 L24 10.5" stroke="#00c9a7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M4 17.5 L4 24 L10.5 24" stroke="#00c9a7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M17.5 24 L24 24 L24 17.5" stroke="#00c9a7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M7 14 L20.5 14 M16.5 9.5 L21 14 L16.5 18.5" stroke="#00c9a7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      SCAN<span>&amp;GO</span>
+    </div>
     <div class="biz" id="biz-name">사업장</div>
   </div>
   <div class="trial-badge" id="trial-badge"></div>
@@ -395,7 +404,16 @@ select.cell-edit{cursor:pointer;}
 <main class="main">
   <div class="topbar">
     <button class="mobile-menu" id="mobile-menu" aria-label="메뉴">☰</button>
-    <div class="logo">SCAN<span>&amp;GO</span></div>
+    <div class="logo">
+      <svg width="18" height="18" viewBox="0 0 28 28" fill="none">
+        <path d="M4 10.5 L4 4 L10.5 4" stroke="#00c9a7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M17.5 4 L24 4 L24 10.5" stroke="#00c9a7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M4 17.5 L4 24 L10.5 24" stroke="#00c9a7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M17.5 24 L24 24 L24 17.5" stroke="#00c9a7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M7 14 L20.5 14 M16.5 9.5 L21 14 L16.5 18.5" stroke="#00c9a7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      SCAN<span>&amp;GO</span>
+    </div>
   </div>
   <div class="view-root" id="view-root"><div class="loading">불러오는 중…</div></div>
 </main>

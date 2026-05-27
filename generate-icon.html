@@ -7,7 +7,7 @@
 body { font-family: sans-serif; background:#1a1a2e; color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; gap:20px; margin:0; }
 h2 { font-size:18px; margin:0; }
 .desc { font-size:13px; color:#aaa; }
-canvas { border-radius:20px; box-shadow:0 8px 40px rgba(0,0,0,.5); }
+canvas { border-radius:20px; box-shadow:0 8px 40px rgba(0,0,0,.5); width:300px; height:300px; }
 button {
   padding:12px 32px; border-radius:8px; border:none;
   background:#00c9a7; color:#fff; font-size:15px; font-weight:700; cursor:pointer;
@@ -31,6 +31,7 @@ const c = document.getElementById('c');
 const ctx = c.getContext('2d');
 const W = 1024;
 
+/* ── Rounded rect helper ── */
 function roundRect(x, y, w, h, r) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
@@ -46,60 +47,46 @@ function roundRect(x, y, w, h, r) {
 }
 
 function draw() {
-  // Background
-  ctx.fillStyle = '#0f1b2d';
-  roundRect(0, 0, W, W, 180);
-  ctx.fill();
-
   const teal = '#00c9a7';
-  const s = W / 28; // scale unit (based on 28x28 viewBox)
 
-  function cell(x, y, w, h, r, color, alpha) {
-    ctx.save();
-    ctx.globalAlpha = alpha ?? 1;
-    ctx.fillStyle = color ?? teal;
-    roundRect(x * s, y * s, w * s, h * s, r * s);
-    ctx.fill();
-    ctx.restore();
-  }
-
-  function border(x, y, w, h, r, sw) {
-    ctx.save();
-    ctx.strokeStyle = teal;
-    ctx.lineWidth = sw * s;
-    roundRect(x * s, y * s, w * s, h * s, r * s);
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  // QR-code-like pattern (scaled from 28x28 viewBox)
-  // Outer rounded rect (logo bg)
-  ctx.save();
-  ctx.globalAlpha = 0.12;
-  ctx.fillStyle = teal;
-  roundRect(1.5 * s, 1.5 * s, 25 * s, 25 * s, 6 * s);
+  /* ── Navy background ── */
+  ctx.fillStyle = '#0f1b2d';
+  roundRect(0, 0, W, W, 150);
   ctx.fill();
-  ctx.restore();
 
-  border(1.5, 1.5, 25, 25, 6, 1.2);
+  /* ── Stroke settings ── */
+  ctx.strokeStyle = teal;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = 62;
 
-  // Top-left finder
-  border(6, 6, 6.5, 6.5, 1.2, 1.2);
-  cell(7.5, 7.5, 3.5, 3.5, 0.5);
+  /* ── Draw a polyline ── */
+  function line(pts) {
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+    ctx.stroke();
+  }
 
-  // Top-right finder
-  border(15.5, 6, 6.5, 6.5, 1.2, 1.2);
-  cell(17, 7.5, 3.5, 3.5, 0.5);
+  const PAD = 105;  // padding from icon edge
+  const LEG = 200;  // bracket leg length
 
-  // Bottom-left finder
-  border(6, 15.5, 6.5, 6.5, 1.2, 1.2);
-  cell(7.5, 17, 3.5, 3.5, 0.5);
+  /* ── Four corner L-brackets ── */
+  line([[PAD, PAD + LEG], [PAD, PAD], [PAD + LEG, PAD]]);                        // TL
+  line([[W - PAD - LEG, PAD], [W - PAD, PAD], [W - PAD, PAD + LEG]]);            // TR
+  line([[PAD, W - PAD - LEG], [PAD, W - PAD], [PAD + LEG, W - PAD]]);            // BL
+  line([[W - PAD - LEG, W - PAD], [W - PAD, W - PAD], [W - PAD, W - PAD - LEG]]); // BR
 
-  // Bottom-right data dots
-  cell(15.5, 15.5, 2.5, 2.5, 0.4);
-  cell(19.5, 15.5, 2.5, 2.5, 0.4, teal, 0.5);
-  cell(15.5, 19.5, 2.5, 2.5, 0.4, teal, 0.5);
-  cell(19.5, 19.5, 2.5, 2.5, 0.4);
+  /* ── Right-pointing arrow (centered) ── */
+  const CY    = W / 2;
+  const aL    = 232;       // body left x
+  const aR    = W - 218;   // arrow tip x
+  const hD    = 178;       // arrowhead depth (horizontal)
+  const hH    = 196;       // arrowhead half-height
+  const bodyEnd = aR - hD;
+
+  line([[aL, CY], [bodyEnd, CY]]);            // body
+  line([[bodyEnd, CY - hH], [aR, CY], [bodyEnd, CY + hH]]); // arrowhead V
 }
 
 draw();
