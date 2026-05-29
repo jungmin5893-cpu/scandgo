@@ -2,6 +2,7 @@ import { supabase } from '../../lib/supabase.js';
 import { requireRole, signOut } from '../../lib/auth.js';
 import { toast } from '../../lib/toast.js';
 import { initOfflineBar } from '../../lib/network.js';
+import { subscribePush } from '../../lib/push.js';
 import { getLabels, canAccess, isFreePlan, PAID_FEATURES } from '../../lib/labels.js';
 import { renderOverview } from './views/overview.js';
 import { renderAttendance } from './views/attendance.js';
@@ -91,6 +92,7 @@ async function init() {
   }
 
   initOfflineBar();
+  initOwnerPush();
   showTrialBadge(profile.tenants);
 
   if (isExpired(profile.tenants)) {
@@ -292,4 +294,61 @@ async function navigate(route, fromHash = false) {
   } finally {
     isNavigating = false;
   }
+}
+
+/* ── 사장님 푸시 구독 ──────────────────────────────── */
+async function initOwnerPush() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return;
+
+  if (Notification.permission === 'granted') {
+    // 이미 허용됨 → 조용히 구독 갱신
+    await subscribePush(profile.id, profile.tenant_id);
+    return;
+  }
+
+  if (Notification.permission === 'denied') return;
+  if (localStorage.getItem('push_banner_closed')) return;
+
+  // 한 번만 보여주는 알림 허용 배너
+  const banner = document.createElement('div');
+  banner.id = 'push-banner';
+  banner.style.cssText = `
+    margin: 8px 18px 0;
+    padding: 10px 12px;
+    background: rgba(0,201,167,.12);
+    border: 1px solid rgba(0,201,167,.3);
+    border-radius: 8px;
+    font-size: 12px;
+    color: rgba(255,255,255,.85);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  `;
+  banner.innerHTML = `
+    <span style="flex:1;line-height:1.4">📱 직원 출퇴근<br>알림 받기</span>
+    <button id="push-yes" style="background:#00c9a7;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer">켜기</button>
+    <button id="push-no" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:16px;cursor:pointer;padding:0 2px">✕</button>
+  `;
+
+  // 사이드바 trial-badge 아래에 삽입
+  const trialBadge = document.getElementById('trial-badge');
+  if (trialBadge?.parentNode) {
+    trialBadge.parentNode.insertBefore(banner, trialBadge.nextSibling);
+  }
+
+  document.getElementById('push-yes').addEventListener('click', async () => {
+    banner.remove();
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') {
+      await subscribePush(profile.id, profile.tenant_id);
+      toast('출퇴근 알림이 켜졌습니다 ✅', 'success');
+    } else {
+      localStorage.setItem('push_banner_closed', '1');
+    }
+  });
+
+  document.getElementById('push-no').addEventListener('click', () => {
+    banner.remove();
+    localStorage.setItem('push_banner_closed', '1');
+  });
 }
