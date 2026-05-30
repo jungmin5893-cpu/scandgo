@@ -265,7 +265,7 @@ async function navigate(route, fromHash = false) {
 
   // 무료/만료 상태에서 유료 기능 접근 차단
   // settings·superadmin·overview는 항상 접근 허용 (결제 및 어드민 기능)
-  const ALWAYS_OPEN = ['overview', 'settings', 'superadmin'];
+  const ALWAYS_OPEN = ['overview', 'settings', 'superadmin', 'calculator'];
   if (!ALWAYS_OPEN.includes(route) && !canAccess(profile.tenants, route)) {
     showUpgradePrompt(route);
     return;
