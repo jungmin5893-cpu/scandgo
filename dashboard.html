@@ -388,6 +388,7 @@ select.cell-edit{cursor:pointer;}
     <button class="nav-item" data-route="leaves" data-feature="leaves"><span class="ic">○</span>연차·휴가</button>
     <button class="nav-item" data-route="contracts" data-feature="contracts"><span class="ic">○</span>전자계약서</button>
     <button class="nav-item" data-route="messages"><span class="ic">📢</span>공지 메시지</button>
+    <button class="nav-item" data-route="calculator"><span class="ic">🧮</span>급여 계산기</button>
     <div class="nav-section">시스템</div>
     <button class="nav-item" data-route="settings" data-feature="settings"><span class="ic">○</span>설정</button>
     <button class="nav-item" id="nav-superadmin" data-route="superadmin" style="display:none"><span class="ic">⚙</span>어드민 패널</button>
@@ -419,6 +420,25 @@ select.cell-edit{cursor:pointer;}
 </main>
 
 <script type="module" src="/src/pages/owner/dashboard.js"></script>
+
+<!-- ══════════════════════════════════════════════════════════
+     채널톡 (Channel.io) 무료 챗봇 — https://channel.io
+     1) channel.io 가입 후 Plugin Key 발급
+     2) 아래 'YOUR_CHANNEL_IO_PLUGIN_KEY' 를 실제 키로 교체
+     TODO: 추후 Claude API 기반 노무 상담봇으로 교체 예정
+     ════════════════════════════════════════════════════════ -->
+<script>
+(function(){var w=window;if(w.ChannelIO){return;}var ch=function(){ch.c(arguments);};ch.q=[];ch.c=function(args){ch.q.push(args);};w.ChannelIO=ch;function l(){if(w.ChannelIOInitialized){return;}w.ChannelIOInitialized=true;var s=document.createElement('script');s.type='text/javascript';s.async=true;s.src='https://cdn.channel.io/plugin/ch-plugin-web.js';var x=document.getElementsByTagName('script')[0];if(x.parentNode){x.parentNode.insertBefore(s,x);}}if(document.readyState==='complete'){l();}else{w.addEventListener('DOMContentLoaded',l);w.addEventListener('load',l);}})();
+
+// ── 채널톡 초기화 (Plugin Key를 실제 키로 교체하세요) ──
+ChannelIO('boot', {
+  pluginKey: 'YOUR_CHANNEL_IO_PLUGIN_KEY',
+  language: 'ko',
+  // 로그인 후 사용자 정보 자동 주입 (dashboard.js에서 profile 로드 후 호출)
+  // ChannelIO('updateUser', { name: '사장님 이름', mobileNumber: '010-xxxx-xxxx' });
+});
+</script>
+
 </div><!-- /.app-wrap -->
 </body>
 </html>

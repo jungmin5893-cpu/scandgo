@@ -24,6 +24,9 @@ export async function renderSettings({ root, profile }) {
             <option value="기타" ${(t.industry_type || '') === '기타' ? 'selected' : ''}>기타 다현장 운영 회사</option>
           </select>
         </label>
+        <label>사업자등록번호<input type="text" id="t-biz-num" value="${t.business_number || ''}" placeholder="000-00-00000"></label>
+        <label>대표자명<input type="text" id="t-ceo" value="${t.ceo_name || ''}" placeholder="홍길동"></label>
+        <label style="grid-column:1/-1">사업장 주소<input type="text" id="t-address" value="${t.address || ''}" placeholder="서울시 강남구 ..."></label>
         <div class="form-actions"><button type="submit" class="btn primary">저장</button></div>
       </form>
     </div>
@@ -57,6 +60,29 @@ export async function renderSettings({ root, profile }) {
             <div style="font-size:12px;color:var(--gray4);margin-top:3px" id="push-status-label">확인 중…</div>
           </div>
           <button class="btn" id="btn-push-toggle" style="min-width:80px">확인 중</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="card-invite-link">
+      <div class="card-head"><h2>직원 초대 링크</h2><div class="card-sub">링크 공유 시 직원이 자동으로 이 사업장에 연결됩니다</div></div>
+      <div style="padding:16px 20px">
+        <div style="background:#f4f6f9;border-radius:8px;padding:12px 14px;margin-bottom:12px;font-size:12px;color:#3d4a5c;line-height:1.7">
+          <strong>사용 방법</strong><br>
+          ① 아래 링크를 카카오톡/문자로 직원에게 공유<br>
+          ② 직원이 링크 클릭 → 가입 시 <strong>이 사업장 자동 연결</strong><br>
+          ③ 직원 관리에서 활성 확인 후 급여·현장 설정
+        </div>
+        <div id="invite-link-box" style="display:flex;gap:8px;align-items:center;background:#fff;border:1.5px solid var(--gray2);border-radius:8px;padding:10px 14px;margin-bottom:12px">
+          <code id="invite-link-url" style="flex:1;font-size:12px;color:#0F2942;word-break:break-all;font-family:monospace">불러오는 중…</code>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn primary small" id="btn-copy-invite">🔗 링크 복사</button>
+          <button class="btn small" id="btn-share-invite" style="${navigator.share ? '' : 'display:none'}">📤 공유하기</button>
+          <button class="btn small" id="btn-regen-invite" style="margin-left:auto;color:#dc2626;border-color:#dc2626">🔄 링크 재생성</button>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:#8a94a6">
+          ※ 재생성 시 기존 링크는 즉시 무효화됩니다
         </div>
       </div>
     </div>
@@ -150,11 +176,57 @@ export async function renderSettings({ root, profile }) {
     const updates = {
       name: root.querySelector('#t-name').value.trim(),
       industry_type: root.querySelector('#t-industry').value,
+      business_number: root.querySelector('#t-biz-num').value.trim() || null,
+      ceo_name: root.querySelector('#t-ceo').value.trim() || null,
+      address: root.querySelector('#t-address').value.trim() || null,
     };
     const { error } = await supabase.from('tenants').update(updates).eq('id', profile.tenant_id);
     if (error) toast(error.message, 'error');
     else toast('저장됨', 'success');
   });
+
+  // ── 초대 링크 ───────────────────────────────────────────
+  (async () => {
+    const { data: tenant } = await supabase
+      .from('tenants')
+      .select('invite_token')
+      .eq('id', profile.tenant_id)
+      .single();
+
+    const token = tenant?.invite_token;
+    const base  = location.origin + location.pathname.replace(/dashboard\.html.*$/, '');
+    const link  = token ? `${base}login.html?join=${token}` : '(토큰 없음)';
+    const urlEl = root.querySelector('#invite-link-url');
+    if (urlEl) urlEl.textContent = link;
+
+    root.querySelector('#btn-copy-invite')?.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(link); }
+      catch {
+        const el = Object.assign(document.createElement('textarea'), { value: link });
+        el.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(el);
+        el.select(); document.execCommand('copy'); el.remove();
+      }
+      toast('초대 링크 복사됨! 카카오톡·문자로 보내세요 📋', 'success');
+    });
+
+    root.querySelector('#btn-share-invite')?.addEventListener('click', () => {
+      navigator.share?.({
+        title: `[SCAN&GO] ${profile.tenants?.name || '사업장'} 직원 가입 초대`,
+        text: '아래 링크를 눌러 출퇴근 앱에 가입해주세요',
+        url: link,
+      }).catch(() => {});
+    });
+
+    root.querySelector('#btn-regen-invite')?.addEventListener('click', async () => {
+      if (!confirm('링크를 재생성하면 기존 링크는 즉시 사용 불가합니다. 계속할까요?')) return;
+      const newToken = crypto.randomUUID?.() || Math.random().toString(36).slice(2) + Date.now().toString(36);
+      const { error } = await supabase.from('tenants').update({ invite_token: newToken }).eq('id', profile.tenant_id);
+      if (error) { toast(error.message, 'error'); return; }
+      const newLink = `${base}login.html?join=${newToken}`;
+      if (urlEl) urlEl.textContent = newLink;
+      toast('초대 링크가 재생성됐습니다', 'success');
+    });
+  })();
 
   root.querySelector('#btn-leave').addEventListener('click', async () => {
     if (!confirm('정말로 사업장을 탈퇴할까요? 모든 데이터가 영구 삭제됩니다.')) return;

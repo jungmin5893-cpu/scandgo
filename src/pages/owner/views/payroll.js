@@ -24,6 +24,7 @@ const DEDUCTION_LABEL = {
 const WAGE_LABEL = { hourly: '시급', daily: '일급', monthly: '월급' };
 
 export async function renderPayroll({ root, profile }) {
+  root._profile = profile;
   root.innerHTML = `
     <div class="page-head">
       <h1>급여 정산</h1>
@@ -278,65 +279,138 @@ function calcNightMinutes(inT, outT) {
   return Math.max(0, total);
 }
 
+// 4대보험·프리랜서 공제 세분화
+function calcDedDetail(deductionType, grossPay) {
+  if (deductionType === 'insurance') {
+    const np = Math.round(grossPay * 0.045 / 10) * 10;   // 국민연금 4.5%
+    const hi = Math.round(grossPay * 0.03545 / 10) * 10; // 건강보험 3.545%
+    const lc = Math.round(hi * 0.1295 / 10) * 10;         // 장기요양 (건강보험료×12.95%)
+    const ei = Math.round(grossPay * 0.009 / 10) * 10;   // 고용보험 0.9%
+    return { np, hi, lc, ei, it: 0, lo: 0, total: np + hi + lc + ei };
+  }
+  if (deductionType === 'freelancer') {
+    const it = Math.round(grossPay * 0.03 / 10) * 10;    // 소득세 3%
+    const lo = Math.round(it * 0.1 / 10) * 10;            // 지방소득세 10%
+    return { np: 0, hi: 0, lc: 0, ei: 0, it, lo, total: it + lo };
+  }
+  return { np: 0, hi: 0, lc: 0, ei: 0, it: 0, lo: 0, total: 0 };
+}
+
 function exportExcel(root) {
   const rows = root._displayRows;
   if (!rows?.length) { toast('내보낼 데이터가 없습니다', 'warn'); return; }
 
-  const wageLabel = { hourly: '시급제', daily: '일급제', monthly: '월급제' };
-  const dedLabel  = { insurance: '4대보험 9.4%', freelancer: '프리랜서 3.3%', none: '없음' };
+  const monthStr    = root.querySelector('#pay-month')?.value || nowKst().format('YYYY-MM');
+  const [yy, mm]    = monthStr.split('-');
+  const periodLabel = `${yy}년 ${Number(mm)}월`;
+  const bizName     = root._profile?.tenants?.name || '';
+  const numFmt      = '#,##0';
+  const wageLabel   = { hourly: '시급제', daily: '일급제', monthly: '월급제' };
+  const dedLabel    = { insurance: '4대보험', freelancer: '프리랜서 3.3%', none: '없음' };
 
-  // 헤더
-  const aoa = [[
-    '직원명', '급여방식', '공제유형', '근무일수', '총 근무시간',
-    '기본급', '야간수당', '연장수당', '주휴수당',
-    '지급합계(세전)', '공제액', '실수령액',
-  ]];
+  const wb = XLSX.utils.book_new();
 
-  for (const r of rows) {
-    aoa.push([
-      r.name,
-      wageLabel[r.wageType]  || r.wageType,
-      dedLabel[r.deductionType] || r.deductionType,
-      r.daysWorked,
-      minutesToHm(r.totalMin),
-      r.basePay,
-      r.nightPay,
-      r.otPay,
-      r.holidayPay,
-      r.grossPay,
-      r.deductions,
-      r.net,
-    ]);
-  }
-
-  // 합계 행
-  const sum = (key) => rows.reduce((a, r) => a + (r[key] || 0), 0);
-  aoa.push([
-    '합계', '', '', rows.reduce((a, r) => a + r.daysWorked, 0), '',
-    sum('basePay'), sum('nightPay'), sum('otPay'), sum('holidayPay'),
-    sum('grossPay'), sum('deductions'), sum('net'),
+  // ── Sheet 1: 급여내역 ─────────────────────────────────────
+  const aoa1 = [];
+  aoa1.push([`${bizName ? bizName + ' ' : ''}${periodLabel} 급여내역`]);
+  aoa1.push([`발행일: ${new Date().toLocaleDateString('ko-KR')}`]);
+  aoa1.push([]);
+  aoa1.push([
+    '직원명', '급여방식', '공제유형',
+    '근무일수', '소정근로(h)', '연장근로(h)', '야간근로(h)',
+    '기본급', '야간수당', '연장수당', '주휴수당', '지급합계(세전)',
+    '국민연금', '건강보험', '장기요양', '고용보험', '소득세', '지방소득세',
+    '공제합계', '실수령액',
   ]);
 
-  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  const tot = { days: 0, base: 0, night: 0, ot: 0, hol: 0, gross: 0, np: 0, hi: 0, lc: 0, ei: 0, it: 0, lo: 0, ded: 0, net: 0 };
 
-  // 열 너비
-  ws['!cols'] = [
-    { wch: 12 }, { wch: 9 }, { wch: 16 }, { wch: 8 }, { wch: 11 },
-    { wch: 13 }, { wch: 11 }, { wch: 11 }, { wch: 11 },
-    { wch: 14 }, { wch: 11 }, { wch: 13 },
-  ];
+  for (const r of rows) {
+    const d   = calcDedDetail(r.deductionType, r.grossPay);
+    const net = r.grossPay - d.total;
+    const regH = r.wageType === 'hourly'
+      ? Math.round((r.totalMin - r.otMin) / 60 * 10) / 10
+      : Math.round(r.totalMin / 60 * 10) / 10;
+    const otH    = Math.round(r.otMin / 60 * 10) / 10;
+    const nightH = Math.round(r.nightMin / 60 * 10) / 10;
 
-  // 금액 셀(F~L, 인덱스 5~11) 숫자 포맷 #,##0
-  for (let ri = 1; ri < aoa.length; ri++) {
-    for (let ci = 5; ci <= 11; ci++) {
-      const addr = XLSX.utils.encode_cell({ r: ri, c: ci });
-      if (ws[addr] && typeof ws[addr].v === 'number') ws[addr].z = '#,##0';
-    }
+    aoa1.push([
+      r.name, wageLabel[r.wageType] || r.wageType, dedLabel[r.deductionType] || r.deductionType,
+      r.daysWorked, regH, otH, nightH,
+      r.basePay, r.nightPay, r.otPay, r.holidayPay, r.grossPay,
+      d.np, d.hi, d.lc, d.ei, d.it, d.lo, d.total, net,
+    ]);
+
+    tot.days += r.daysWorked; tot.base += r.basePay; tot.night += r.nightPay;
+    tot.ot += r.otPay; tot.hol += r.holidayPay; tot.gross += r.grossPay;
+    tot.np += d.np; tot.hi += d.hi; tot.lc += d.lc; tot.ei += d.ei;
+    tot.it += d.it; tot.lo += d.lo; tot.ded += d.total; tot.net += net;
   }
 
-  const monthStr = root.querySelector('#pay-month')?.value || nowKst().format('YYYY-MM');
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, `${monthStr} 급여정산`);
+  aoa1.push([
+    '합계', '', '', tot.days, '', '', '',
+    tot.base, tot.night, tot.ot, tot.hol, tot.gross,
+    tot.np, tot.hi, tot.lc, tot.ei, tot.it, tot.lo, tot.ded, tot.net,
+  ]);
+
+  const ws1 = XLSX.utils.aoa_to_sheet(aoa1);
+  ws1['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 19 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 19 } },
+  ];
+  ws1['!cols'] = [
+    { wch: 12 }, { wch: 8 }, { wch: 12 },
+    { wch: 8 }, { wch: 10 }, { wch: 10 }, { wch: 10 },
+    { wch: 11 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 14 },
+    { wch: 11 }, { wch: 11 }, { wch: 11 }, { wch: 11 }, { wch: 9 }, { wch: 11 },
+    { wch: 10 }, { wch: 12 },
+  ];
+  for (let ri = 4; ri < aoa1.length; ri++) {
+    for (let ci = 7; ci <= 19; ci++) {
+      const addr = XLSX.utils.encode_cell({ r: ri, c: ci });
+      if (ws1[addr] && typeof ws1[addr].v === 'number') ws1[addr].z = numFmt;
+    }
+  }
+  XLSX.utils.book_append_sheet(wb, ws1, `${monthStr} 급여내역`);
+
+  // ── Sheet 2: 4대보험 공제내역 ─────────────────────────────
+  const aoa2 = [];
+  aoa2.push([`${bizName ? bizName + ' ' : ''}${periodLabel} 4대보험 공제내역`]);
+  aoa2.push(['※ 근로자 부담분 기준  |  사업주 부담분(동일금액)은 별도 납부']);
+  aoa2.push([]);
+  aoa2.push([
+    '직원명', '공제유형', '세전급여',
+    '국민연금(4.5%)', '건강보험(3.545%)', '장기요양(건강보험×12.95%)', '고용보험(0.9%)',
+    '소득세(3%)', '지방소득세(소득세×10%)', '공제합계',
+  ]);
+
+  const tot2 = { gross: 0, np: 0, hi: 0, lc: 0, ei: 0, it: 0, lo: 0, total: 0 };
+  for (const r of rows) {
+    const d = calcDedDetail(r.deductionType, r.grossPay);
+    aoa2.push([r.name, dedLabel[r.deductionType] || r.deductionType, r.grossPay,
+      d.np, d.hi, d.lc, d.ei, d.it, d.lo, d.total]);
+    tot2.gross += r.grossPay; tot2.np += d.np; tot2.hi += d.hi; tot2.lc += d.lc;
+    tot2.ei += d.ei; tot2.it += d.it; tot2.lo += d.lo; tot2.total += d.total;
+  }
+  aoa2.push(['합계', '', tot2.gross, tot2.np, tot2.hi, tot2.lc, tot2.ei, tot2.it, tot2.lo, tot2.total]);
+
+  const ws2 = XLSX.utils.aoa_to_sheet(aoa2);
+  ws2['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 9 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 9 } },
+  ];
+  ws2['!cols'] = [
+    { wch: 12 }, { wch: 12 }, { wch: 14 },
+    { wch: 13 }, { wch: 15 }, { wch: 22 }, { wch: 12 }, { wch: 10 }, { wch: 18 }, { wch: 10 },
+  ];
+  for (let ri = 4; ri < aoa2.length; ri++) {
+    for (let ci = 2; ci <= 9; ci++) {
+      const addr = XLSX.utils.encode_cell({ r: ri, c: ci });
+      if (ws2[addr] && typeof ws2[addr].v === 'number') ws2[addr].z = numFmt;
+    }
+  }
+  XLSX.utils.book_append_sheet(wb, ws2, '4대보험내역');
+
   XLSX.writeFile(wb, `SCANDGO_급여정산_${monthStr}.xlsx`);
   toast('엑셀 다운로드 완료', 'success');
 }
@@ -349,6 +423,14 @@ function printPayslip(d, monthStr, bizName) {
   const periodLabel = `${yy}년 ${Number(mm)}월`;
   const wageLbl = WAGE_LABEL[d.wageType] || '시급';
   const dedLbl  = DEDUCTION_LABEL[d.deductionType] || '-';
+
+  // 공제 세분화
+  const ded = calcDedDetail(d.deductionType, d.grossPay);
+  const netActual = d.grossPay - ded.total;
+  const regH  = d.wageType === 'hourly'
+    ? Math.round((d.totalMin - d.otMin) / 60 * 10) / 10
+    : Math.round(d.totalMin / 60 * 10) / 10;
+  const otH = Math.round(d.otMin / 60 * 10) / 10;
 
   const row = (label, value, cls = '') =>
     `<tr><td class="lbl">${label}</td><td class="val ${cls}">${value}</td></tr>`;
@@ -414,7 +496,8 @@ function printPayslip(d, monthStr, bizName) {
   <div class="field"><span class="k">급여 방식</span><span class="v">${wageLbl}</span></div>
   <div class="field"><span class="k">공제 유형</span><span class="v">${dedLbl}</span></div>
   <div class="field"><span class="k">근무일</span><span class="v">${d.daysWorked}일</span></div>
-  <div class="field"><span class="k">총 근무</span><span class="v">${minutesToHm(d.totalMin)}</span></div>
+  <div class="field"><span class="k">소정근로</span><span class="v">${regH}h</span></div>
+  ${otH > 0 ? `<div class="field"><span class="k">연장근로</span><span class="v">${otH}h</span></div>` : ''}
 </div>
 
 <div class="section-title">지급 내역</div>
@@ -432,13 +515,22 @@ function printPayslip(d, monthStr, bizName) {
 <div class="section-title">공제 내역</div>
 <table>
   <tbody>
-    ${row(`${dedLbl} 공제`, d.deductions > 0 ? `-${d.deductions.toLocaleString()}원` : '없음', d.deductions > 0 ? 'minus' : '')}
+    ${d.deductionType === 'insurance' ? `
+      ${row('국민연금 (4.5%)', `-${ded.np.toLocaleString()}원`, 'minus')}
+      ${row('건강보험 (3.545%)', `-${ded.hi.toLocaleString()}원`, 'minus')}
+      ${row('장기요양보험 (건강보험료×12.95%)', `-${ded.lc.toLocaleString()}원`, 'minus')}
+      ${row('고용보험 (0.9%)', `-${ded.ei.toLocaleString()}원`, 'minus')}
+    ` : d.deductionType === 'freelancer' ? `
+      ${row('소득세 (3%)', `-${ded.it.toLocaleString()}원`, 'minus')}
+      ${row('지방소득세 (소득세×10%)', `-${ded.lo.toLocaleString()}원`, 'minus')}
+    ` : row('공제 없음', '0원')}
+    ${ded.total > 0 ? row('<strong>공제 합계</strong>', `<strong>-${ded.total.toLocaleString()}원</strong>`, 'minus') : ''}
   </tbody>
 </table>
 
 <div class="net-box">
   <span class="k">실수령액 (세후)</span>
-  <span class="v">${d.net.toLocaleString()}원</span>
+  <span class="v">${netActual.toLocaleString()}원</span>
 </div>
 
 <div class="footer">

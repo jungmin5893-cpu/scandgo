@@ -1,10 +1,11 @@
 import { supabase } from '../../../lib/supabase.js';
 import { toast } from '../../../lib/toast.js';
 import { getLabels } from '../../../lib/labels.js';
+import * as XLSX from 'xlsx';
 
-const MIN_HOURLY  = 10030;               // 2025년 최저시급 (원)
+const MIN_HOURLY  = 10320;               // 2026년 최저시급 (원)
 const MIN_DAILY   = MIN_HOURLY * 8;      // 최저일급 (8h 기준)
-const MIN_MONTHLY = MIN_HOURLY * 209;    // 최저월급 (209h 기준)
+const MIN_MONTHLY = MIN_HOURLY * 209;    // 최저월급 (209h 기준, 2026년 = 2,156,880원)
 
 const WAGE_META = {
   hourly:  { label: '시급', unit: '원/시간', min: MIN_HOURLY  },
@@ -21,6 +22,24 @@ export async function renderEmployees({ root, profile }) {
     <div class="page-head">
       <h1>${wLbl} 관리</h1>
       <div class="page-sub">전화번호와 6자리 가입 코드를 발급해 ${wLbl}이 자기 폰으로 가입하게 합니다</div>
+    </div>
+
+    <!-- ── 엑셀 일괄 등록 ── -->
+    <div class="card">
+      <div class="card-head" style="flex-direction:row;justify-content:space-between;align-items:center">
+        <div>
+          <h2>📋 엑셀 일괄 등록</h2>
+          <div class="card-sub">엑셀 파일로 ${wLbl}을 한 번에 등록합니다</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn small" id="btn-dl-template">📥 템플릿 다운로드</button>
+          <button class="btn small primary" id="btn-import-excel">📤 엑셀 업로드</button>
+          <input type="file" id="import-file-input" accept=".xlsx,.xls,.csv" style="display:none">
+        </div>
+      </div>
+      <div id="import-preview" style="display:none;padding:14px 20px;border-top:1px solid var(--gray2)">
+        <!-- 미리보기 -->
+      </div>
     </div>
 
     <div class="card">
@@ -70,6 +89,18 @@ export async function renderEmployees({ root, profile }) {
   await loadStores(root, profile);
   await loadInvites(root, profile);
   await loadEmployees(root, profile);
+
+  // ── 엑셀 일괄 등록 ──────────────────────────────────────
+  root.querySelector('#btn-dl-template').addEventListener('click', () => downloadTemplate());
+  root.querySelector('#btn-import-excel').addEventListener('click', () => {
+    root.querySelector('#import-file-input').click();
+  });
+  root.querySelector('#import-file-input').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    e.target.value = ''; // reset
+    await handleImportFile(file, root, profile);
+  });
 
   root.querySelector('#form-invite').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -151,7 +182,7 @@ async function loadEmployees(root, profile) {
   // wage_type / deduction_type 컬럼이 없는 구 DB 대비 fallback
   let { data, error } = await supabase
     .from('profiles')
-    .select('id, name, phone, hourly_wage, wage_type, deduction_type, position, active, store_id, role, store:stores(name)')
+    .select('id, name, phone, hourly_wage, wage_type, deduction_type, position, active, store_id, role, birth_date, gender, hire_date, bank_name, bank_account, store:stores(name)')
     .eq('tenant_id', profile.tenant_id)
     .in('role', ['employee', 'manager'])
     .order('name');
@@ -239,7 +270,10 @@ async function loadEmployees(root, profile) {
           ${r.role === 'manager' ? '권한 해제' : '매니저 지정'}
         </button>
       </td>
-      <td><button class="btn small primary" data-save="${r.id}">저장</button></td>
+      <td>
+        <button class="btn small primary" data-save="${r.id}">저장</button>
+        <button class="btn small ghost" data-detail="${r.id}" style="margin-top:4px;font-size:11px">상세정보</button>
+      </td>
     </tr>`;
   }).join('');
 
@@ -291,6 +325,14 @@ async function loadEmployees(root, profile) {
       if (error) toast(error.message, 'error');
       else toast('저장됨', 'success');
     });
+  });
+
+  // 상세정보 모달 (생년월일·성별·입사일·계좌)
+  tbody.querySelectorAll('[data-detail]').forEach(btn => {
+    const empId = btn.dataset.detail;
+    const emp = data.find(d => d.id === empId);
+    if (!emp) return;
+    btn.addEventListener('click', () => openDetailModal(emp));
   });
 
   // 매니저 지정 / 해제
@@ -372,6 +414,182 @@ function showInviteShareCard(root, { code, phone, name }) {
     card.querySelector('#btn-invite-share')?.addEventListener('click', () => {
       navigator.share({ title: 'SCAN&GO 가입 초대', text: shareText }).catch(() => {});
     });
+  }
+}
+
+function openDetailModal(emp) {
+  document.querySelectorAll('.emp-detail-modal').forEach(m => m.remove());
+
+  const fmt = (v) => v ? v.slice(0, 10) : '';
+  const modal = document.createElement('div');
+  modal.className = 'pay-modal emp-detail-modal';
+  modal.innerHTML = `
+    <div class="pay-modal-backdrop"></div>
+    <div class="pay-modal-box" style="max-width:420px">
+      <div class="pay-modal-head">
+        <h2>${emp.name}님 상세정보</h2>
+        <button class="pay-modal-close">✕</button>
+      </div>
+      <div class="pay-modal-body" style="padding:20px">
+        <div style="display:grid;gap:14px">
+          <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:#555">
+            생년월일
+            <input type="date" id="d-birth" value="${fmt(emp.birth_date)}" style="padding:8px;border:1px solid #dde3ed;border-radius:6px;font-size:14px">
+          </label>
+          <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:#555">
+            성별
+            <select id="d-gender" style="padding:8px;border:1px solid #dde3ed;border-radius:6px;font-size:14px">
+              <option value="" ${!emp.gender ? 'selected' : ''}>선택 안 함</option>
+              <option value="남" ${emp.gender === '남' ? 'selected' : ''}>남</option>
+              <option value="여" ${emp.gender === '여' ? 'selected' : ''}>여</option>
+            </select>
+          </label>
+          <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:#555">
+            입사일
+            <input type="date" id="d-hire" value="${fmt(emp.hire_date)}" style="padding:8px;border:1px solid #dde3ed;border-radius:6px;font-size:14px">
+          </label>
+          <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:#555">
+            은행명
+            <input type="text" id="d-bank" value="${emp.bank_name || ''}" placeholder="국민은행" style="padding:8px;border:1px solid #dde3ed;border-radius:6px;font-size:14px">
+          </label>
+          <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:#555">
+            계좌번호
+            <input type="text" id="d-acct" value="${emp.bank_account || ''}" placeholder="123-456-789012" style="padding:8px;border:1px solid #dde3ed;border-radius:6px;font-size:14px">
+          </label>
+          <button class="btn primary" id="d-save" style="margin-top:6px">저장</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  modal.querySelector('.pay-modal-backdrop').addEventListener('click', () => modal.remove());
+  modal.querySelector('.pay-modal-close').addEventListener('click', () => modal.remove());
+  modal.querySelector('#d-save').addEventListener('click', async () => {
+    const updates = {
+      birth_date:   modal.querySelector('#d-birth').value || null,
+      gender:       modal.querySelector('#d-gender').value || null,
+      hire_date:    modal.querySelector('#d-hire').value || null,
+      bank_name:    modal.querySelector('#d-bank').value.trim() || null,
+      bank_account: modal.querySelector('#d-acct').value.trim() || null,
+    };
+    const btn = modal.querySelector('#d-save');
+    btn.disabled = true;
+    const { error } = await supabase.from('profiles').update(updates).eq('id', emp.id);
+    btn.disabled = false;
+    if (error) { toast(error.message, 'error'); return; }
+    Object.assign(emp, updates);
+    toast('상세정보 저장됨', 'success');
+    modal.remove();
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  엑셀 일괄 등록
+// ═══════════════════════════════════════════════════════════
+function downloadTemplate() {
+  const headers = ['이름*', '전화번호*', '급여방식(hourly/daily/monthly)*', '금액(원)*', '공제유형(insurance/freelancer/none)', '직책', '생년월일(YYYY-MM-DD)', '성별(남/여)', '입사일(YYYY-MM-DD)', '은행명', '계좌번호'];
+  const sample  = ['홍길동', '010-1234-5678', 'hourly', '10320', 'insurance', '현장반장', '1990-01-15', '남', '2024-03-01', '국민은행', '123-456-789012'];
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([headers, sample]);
+  ws['!cols'] = headers.map(() => ({ wch: 22 }));
+  XLSX.utils.book_append_sheet(wb, ws, '직원등록양식');
+  XLSX.writeFile(wb, 'SCANDGO_직원등록양식.xlsx');
+  toast('템플릿 다운로드 완료', 'success');
+}
+
+async function handleImportFile(file, root, profile) {
+  try {
+    const buf  = await file.arrayBuffer();
+    const wb   = XLSX.read(buf, { type: 'array' });
+    const ws   = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+    if (rows.length < 2) { toast('데이터 행이 없습니다', 'warn'); return; }
+
+    // 헤더 행 skip
+    const dataRows = rows.slice(1).filter(r => r[0]?.toString().trim());
+
+    // 미리보기 렌더링
+    const preview = root.querySelector('#import-preview');
+    preview.style.display = '';
+    preview.innerHTML = `
+      <div style="font-size:13px;font-weight:700;color:#0F2942;margin-bottom:10px">
+        📋 ${dataRows.length}명 등록 예정 — 확인 후 [등록하기]를 누르세요
+      </div>
+      <div style="overflow-x:auto;margin-bottom:12px">
+        <table class="att-table" style="min-width:600px">
+          <thead><tr><th>#</th><th>이름</th><th>전화번호</th><th>급여방식</th><th>금액</th><th>공제</th><th>입사일</th><th>상태</th></tr></thead>
+          <tbody>
+            ${dataRows.map((r, i) => {
+              const name    = r[0]?.toString().trim();
+              const phone   = r[1]?.toString().trim();
+              const wtype   = r[2]?.toString().trim() || 'hourly';
+              const amount  = Number(r[3]) || 0;
+              const err     = !name ? '이름 없음' : !phone ? '전화번호 없음' : amount <= 0 ? '금액 오류' : '';
+              return `<tr>
+                <td>${i+1}</td>
+                <td><strong>${name || '?'}</strong></td>
+                <td>${phone || '-'}</td>
+                <td>${wtype}</td>
+                <td>${amount.toLocaleString()}원</td>
+                <td>${r[4]?.toString().trim() || 'insurance'}</td>
+                <td>${r[8]?.toString().trim() || '-'}</td>
+                <td>${err ? `<span style="color:#dc2626;font-size:11px;font-weight:700">${err}</span>` : '<span style="color:#059669;font-size:11px">✓</span>'}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn primary" id="btn-confirm-import">✅ ${dataRows.length}명 등록하기</button>
+        <button class="btn" id="btn-cancel-import">취소</button>
+      </div>
+    `;
+    preview.querySelector('#btn-cancel-import').addEventListener('click', () => {
+      preview.style.display = 'none';
+    });
+    preview.querySelector('#btn-confirm-import').addEventListener('click', async () => {
+      const btn = preview.querySelector('#btn-confirm-import');
+      btn.disabled = true;
+      btn.textContent = '등록 중…';
+
+      let ok = 0, fail = 0;
+      for (const r of dataRows) {
+        const name  = r[0]?.toString().trim();
+        const phone = r[1]?.toString().trim();
+        const wtype = r[2]?.toString().trim() || 'hourly';
+        const amount = Number(r[3]) || 0;
+        if (!name || !phone) { fail++; continue; }
+
+        const payload = {
+          tenant_id:      profile.tenant_id,
+          role:           'employee',
+          name,
+          phone,
+          wage_type:      ['hourly','daily','monthly'].includes(wtype) ? wtype : 'hourly',
+          hourly_wage:    amount,
+          deduction_type: ['insurance','freelancer','none'].includes(r[4]?.toString().trim()) ? r[4].toString().trim() : 'insurance',
+          position:       r[5]?.toString().trim() || null,
+          birth_date:     r[6]?.toString().trim() || null,
+          gender:         r[7]?.toString().trim() || null,
+          hire_date:      r[8]?.toString().trim() || null,
+          bank_name:      r[9]?.toString().trim() || null,
+          bank_account:   r[10]?.toString().trim() || null,
+          active:         true,
+        };
+
+        const { error } = await supabase.from('profiles').insert(payload);
+        if (error) { console.warn('import row error', error.message); fail++; }
+        else ok++;
+      }
+
+      preview.style.display = 'none';
+      await loadEmployees(root, profile);
+      if (fail > 0) toast(`${ok}명 등록 완료, ${fail}명 실패 (콘솔 확인)`, 'warn');
+      else toast(`✅ ${ok}명 일괄 등록 완료!`, 'success');
+    });
+  } catch (e) {
+    toast(`파일 파싱 오류: ${e.message}`, 'error');
   }
 }
 

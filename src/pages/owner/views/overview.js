@@ -61,6 +61,7 @@ export async function renderOverview({ root, profile }) {
   await loadRecent(root, profile);
   await loadMonthStats(root, profile);
   await load52h(root, profile);
+  await loadLaborGuard(root, profile);  // ← 노무경보 배너
   setupPushBanner(root, profile);
 
   const channel = supabase.channel('owner-att')
@@ -298,6 +299,128 @@ async function load52h(root, profile) {
       <td><span class="h52-badge ${badgeClass}">${badgeText}</span></td>
     </tr>`;
   }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  노무경보 배너 — 퇴직금 임박 · 주휴수당 · 주52시간 초과
+// ═══════════════════════════════════════════════════════════
+async function loadLaborGuard(root, profile) {
+  const today = nowKst();
+  const alerts = [];
+
+  // ① 퇴직금 임박 — hire_date 기준 11개월 이상 된 직원 (1년 전 D-30 이내)
+  const { data: empsHire } = await supabase
+    .from('profiles')
+    .select('name, hire_date')
+    .eq('tenant_id', profile.tenant_id)
+    .in('role', ['employee', 'manager'])
+    .eq('active', true)
+    .not('hire_date', 'is', null);
+
+  const retiring = (empsHire || []).filter(e => {
+    const hd = e.hire_date ? nowKst().diff(nowKst().clone().set({
+      year:  parseInt(e.hire_date.substring(0,4)),
+      month: parseInt(e.hire_date.substring(5,7)) - 1,
+      date:  parseInt(e.hire_date.substring(8,10)),
+    }), 'day') : 0;
+    return hd >= 335 && hd < 395; // 11개월~13개월 사이 경보
+  });
+
+  if (retiring.length > 0) {
+    const names = retiring.map(e => e.name).join(', ');
+    alerts.push({
+      level: 'error',
+      icon: '⚠️',
+      title: `퇴직금 발생 임박 (${retiring.length}명)`,
+      body: `${names} — 곧 1년 계속근로 충족. 미지급 시 지연이자 20% + 형사처벌 위험.`,
+      action: { label: '직원 관리', route: 'employees' },
+    });
+  }
+
+  // ② 주 52시간 초과 직원 — load52h 와 동일 로직 재활용
+  const weekStart = today.clone().startOf('isoWeek').format('YYYY-MM-DD');
+  const weekEnd   = today.clone().endOf('isoWeek').format('YYYY-MM-DD');
+  const { data: weekAtts } = await supabase
+    .from('attendances')
+    .select('employee_id, check_in_at, check_out_at, profiles!attendances_employee_id_fkey(name)')
+    .eq('tenant_id', profile.tenant_id)
+    .gte('workday', weekStart)
+    .lte('workday', weekEnd);
+
+  const empMinMap = {};
+  const empNameMap = {};
+  for (const r of (weekAtts || [])) {
+    if (!r.check_out_at) continue;
+    const min = diffMinutes(r.check_in_at, r.check_out_at);
+    empMinMap[r.employee_id] = (empMinMap[r.employee_id] || 0) + min;
+    if (r.profiles?.name) empNameMap[r.employee_id] = r.profiles.name;
+  }
+
+  const over52 = Object.entries(empMinMap).filter(([, m]) => m >= 52 * 60);
+  if (over52.length > 0) {
+    const names = over52.map(([id]) => empNameMap[id] || id).join(', ');
+    alerts.push({
+      level: 'error',
+      icon: '🚨',
+      title: `주 52시간 초과 (${over52.length}명)`,
+      body: `${names} — 근로기준법 §53 위반. 2년 이하 징역 또는 2천만원 이하 벌금.`,
+      action: { label: '근태 확인', route: 'attendance' },
+    });
+  }
+
+  // ③ 주휴수당 발생 대상 — 이번 주 15h 이상 + 아직 주휴수당 미계산
+  const holiEligible = Object.entries(empMinMap)
+    .filter(([, m]) => m >= 15 * 60 && m < 52 * 60) // 15h 이상이고 52h 미만
+    .length;
+  if (holiEligible > 0) {
+    alerts.push({
+      level: 'warn',
+      icon: '📋',
+      title: `주휴수당 발생 대상 (${holiEligible}명)`,
+      body: `이번 주 15시간 이상 근무한 직원에게 주휴수당이 발생합니다. 급여 정산 시 반드시 포함하세요.`,
+      action: { label: '급여 정산', route: 'payroll' },
+    });
+  }
+
+  if (!alerts.length) return;
+
+  // 배너 컨테이너 삽입 (page-head 다음)
+  const pageHead = root.querySelector('.page-head');
+  const container = document.createElement('div');
+  container.id = 'labor-guard-banners';
+  container.style.cssText = 'margin-bottom:16px;display:flex;flex-direction:column;gap:8px';
+
+  for (const a of alerts) {
+    const colors = a.level === 'error'
+      ? { bg: 'linear-gradient(90deg,#7f1d1d,#991b1b)', border: '#ef4444', text: '#fff', sub: 'rgba(255,255,255,.75)' }
+      : { bg: 'linear-gradient(90deg,#78350f,#92400e)', border: '#f59e0b', text: '#fff', sub: 'rgba(255,255,255,.75)' };
+
+    const div = document.createElement('div');
+    div.style.cssText = `background:${colors.bg};border-left:4px solid ${colors.border};border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 8px rgba(0,0,0,.2)`;
+    div.innerHTML = `
+      <div style="font-size:22px;flex-shrink:0">${a.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:800;color:${colors.text};margin-bottom:3px">🛡️ 노무경보: ${a.title}</div>
+        <div style="font-size:12px;color:${colors.sub};line-height:1.5">${a.body}</div>
+      </div>
+      ${a.action ? `<button class="lb-action-btn" data-route="${a.action.route}" style="padding:8px 14px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">${a.action.label} →</button>` : ''}
+      <button class="lb-close" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:18px;cursor:pointer;padding:0 4px;flex-shrink:0">✕</button>
+    `;
+    container.appendChild(div);
+  }
+
+  pageHead.after(container);
+
+  // 닫기 버튼 & 라우팅
+  container.querySelectorAll('.lb-close').forEach(btn => {
+    btn.addEventListener('click', () => btn.closest('div[style]').remove());
+  });
+  container.querySelectorAll('.lb-action-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const route = btn.dataset.route;
+      document.querySelector(`.nav-item[data-route="${route}"]`)?.click();
+    });
+  });
 }
 
 async function loadRecent(root, profile) {

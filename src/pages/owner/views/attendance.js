@@ -5,6 +5,7 @@ import * as XLSX from 'xlsx';
 import { getLabels } from '../../../lib/labels.js';
 
 export async function renderAttendance({ root, profile }) {
+  root._profile = profile;
   const labels = getLabels(profile.tenants?.industry_type);
   const monthStart = nowKst().startOf('month').format('YYYY-MM-DD');
   const monthEnd = nowKst().endOf('month').format('YYYY-MM-DD');
@@ -102,25 +103,127 @@ async function loadRows(root, profile, start, end) {
 
 function exportExcel(root, labels = { site: '현장' }) {
   const rows = root._attRows;
-  if (!rows || !rows.length) { toast('내보낼 데이터가 없습니다', 'warn'); return; }
-  const aoa = [['근무일', '이름', labels.site, '시프트', '출근', '퇴근', '근무시간(분)', '메모']];
-  for (const r of rows) {
-    aoa.push([
+  if (!rows?.length) { toast('내보낼 데이터가 없습니다', 'warn'); return; }
+
+  const month    = root.querySelector('#att-month').value;
+  const [yy, mm] = month.split('-');
+  const periodLabel = `${yy}년 ${Number(mm)}월`;
+  const bizName  = root._profile?.tenants?.name || '';
+
+  // 날짜 오름차순 정렬
+  const sorted = [...rows].sort((a, b) =>
+    a.workday < b.workday ? -1 : a.workday > b.workday ? 1 :
+    (a.check_in_at || '').localeCompare(b.check_in_at || ''));
+
+  const wb = XLSX.utils.book_new();
+
+  // ── Sheet 1: 출퇴근기록 (리스트) ──────────────────────────
+  const aoa1 = [];
+  if (bizName) aoa1.push([`${bizName} ${periodLabel} 출퇴근기록`, '', '', '', '', '', '', '', '']);
+  aoa1.push(['근무일', '이름', labels.site, '시프트', '출근', '퇴근', '근무시간', '근무(h)', '메모']);
+
+  for (const r of sorted) {
+    const mins = r.check_out_at ? diffMinutes(r.check_in_at, r.check_out_at) : null;
+    aoa1.push([
       r.workday,
       r.employee?.name || '',
       r.store?.name || '',
       r.shift?.name || '',
-      kst(r.check_in_at).format('YYYY-MM-DD HH:mm'),
-      r.check_out_at ? kst(r.check_out_at).format('YYYY-MM-DD HH:mm') : '',
-      r.check_out_at ? diffMinutes(r.check_in_at, r.check_out_at) : '',
+      kst(r.check_in_at).format('HH:mm'),
+      r.check_out_at ? kst(r.check_out_at).format('HH:mm') : '근무중',
+      mins != null ? minutesToHm(mins) : '',
+      mins != null ? Math.round(mins / 6) / 10 : '',
       r.note || '',
     ]);
   }
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols'] = [{ wch: 12 }, { wch: 10 }, { wch: 14 }, { wch: 10 }, { wch: 18 }, { wch: 18 }, { wch: 12 }, { wch: 20 }];
-  XLSX.utils.book_append_sheet(wb, ws, '근태');
-  const month = root.querySelector('#att-month').value;
-  XLSX.writeFile(wb, `SCANDGO_근태_${month}.xlsx`);
+  const totalMins1 = sorted.reduce((s, r) =>
+    s + (r.check_out_at ? diffMinutes(r.check_in_at, r.check_out_at) : 0), 0);
+  aoa1.push(['합계', `${sorted.length}건`, '', '', '', '', minutesToHm(totalMins1), Math.round(totalMins1 / 6) / 10, '']);
+
+  const ws1 = XLSX.utils.aoa_to_sheet(aoa1);
+  if (bizName) ws1['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 8 } }];
+  ws1['!cols'] = [
+    { wch: 12 }, { wch: 10 }, { wch: 14 }, { wch: 10 },
+    { wch: 8 }, { wch: 8 }, { wch: 12 }, { wch: 8 }, { wch: 20 },
+  ];
+  XLSX.utils.book_append_sheet(wb, ws1, '출퇴근기록');
+
+  // ── Sheet 2: 출역일보 (날짜 × 직원 크로스탭) ────────────────
+  const dates = [...new Set(sorted.map(r => r.workday))]; // 이미 오름차순
+
+  // 직원 순서 유지 (첫 등장 순)
+  const empNames = [];
+  const seenEmps = new Set();
+  for (const r of sorted) {
+    const n = r.employee?.name || '?';
+    if (!seenEmps.has(n)) { seenEmps.add(n); empNames.push(n); }
+  }
+
+  const aoa2 = [];
+  const titleRow = [`${bizName ? bizName + ' ' : ''}출역일보 (${periodLabel})`];
+  aoa2.push(titleRow);
+  aoa2.push([`발행일: ${new Date().toLocaleDateString('ko-KR')}`]);
+  aoa2.push([]);
+  // 헤더: 날짜 | 현장 | 출역인원 | 직원A | 직원B | ... | 합계(h)
+  aoa2.push(['날짜', labels.site, '출역인원', ...empNames, '합계(h)']);
+
+  const colTotalMins = new Array(empNames.length).fill(0);
+  let grandMins = 0;
+
+  for (const date of dates) {
+    const dayRows = sorted.filter(r => r.workday === date);
+
+    // 해당일 대표 현장 (가장 많은 기록의 현장)
+    const storeCnt = {};
+    for (const r of dayRows) {
+      const s = r.store?.name || '';
+      storeCnt[s] = (storeCnt[s] || 0) + 1;
+    }
+    const mainStore = Object.entries(storeCnt).sort((a, b) => b[1] - a[1])[0]?.[0] || '';
+
+    const uniqueEmpCnt = new Set(dayRows.map(r => r.employee?.name || '?')).size;
+    const dayTotalMins = dayRows.reduce((s, r) =>
+      s + (r.check_out_at ? diffMinutes(r.check_in_at, r.check_out_at) : 0), 0);
+    grandMins += dayTotalMins;
+
+    const cells = [date, mainStore, uniqueEmpCnt];
+    empNames.forEach((name, i) => {
+      const empRows = dayRows.filter(r => r.employee?.name === name);
+      if (!empRows.length) { cells.push(''); return; }
+      const empMins = empRows.reduce((s, r) =>
+        s + (r.check_out_at ? diffMinutes(r.check_in_at, r.check_out_at) : 0), 0);
+      colTotalMins[i] += empMins;
+      const parts = empRows.map(r => {
+        const inT  = kst(r.check_in_at).format('HH:mm');
+        const outT = r.check_out_at ? kst(r.check_out_at).format('HH:mm') : '근무중';
+        const m    = r.check_out_at ? diffMinutes(r.check_in_at, r.check_out_at) : 0;
+        return `${inT}~${outT}(${minutesToHm(m)})`;
+      });
+      cells.push(parts.join(' / '));
+    });
+    cells.push(Math.round(dayTotalMins / 6) / 10);
+    aoa2.push(cells);
+  }
+
+  // 합계 행
+  aoa2.push([
+    '합계', `${dates.length}일`, '',
+    ...colTotalMins.map(m => minutesToHm(m)),
+    Math.round(grandMins / 6) / 10,
+  ]);
+
+  const ws2 = XLSX.utils.aoa_to_sheet(aoa2);
+  ws2['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: empNames.length + 3 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: empNames.length + 3 } },
+  ];
+  ws2['!cols'] = [
+    { wch: 12 }, { wch: 14 }, { wch: 8 },
+    ...empNames.map(() => ({ wch: 24 })),
+    { wch: 10 },
+  ];
+  XLSX.utils.book_append_sheet(wb, ws2, '출역일보');
+
+  XLSX.writeFile(wb, `SCANDGO_출역일보_${month}.xlsx`);
   toast('엑셀 다운로드 완료', 'success');
 }

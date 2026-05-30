@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCAN&GO 개발 로드맵 체크리스트</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter','Malgun Gothic',sans-serif;background:#f4f6f9;color:#0f1b2d;min-height:100vh;padding:32px 20px}
+.wrap{max-width:900px;margin:0 auto}
+.page-head{margin-bottom:28px}
+.page-head h1{font-size:26px;font-weight:900;letter-spacing:-.3px}
+.page-head .sub{font-size:13px;color:#8a94a6;margin-top:6px}
+.updated{display:inline-block;background:#e0faf6;color:#00a88a;font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;margin-top:8px}
+.section{margin-bottom:24px}
+.section-title{font-size:13px;font-weight:800;color:#8a94a6;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;padding-left:4px}
+.card{background:#fff;border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,.06);border:1px solid #e2e7ef;overflow:hidden}
+.item{display:flex;align-items:flex-start;gap:14px;padding:14px 18px;border-bottom:1px solid #f0f2f5}
+.item:last-child{border-bottom:none}
+.item-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.item-body{flex:1;min-width:0}
+.item-title{font-size:14px;font-weight:700;color:#0f1b2d;margin-bottom:3px}
+.item-desc{font-size:12px;color:#8a94a6;line-height:1.6}
+.badge{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;margin-left:8px;vertical-align:middle}
+.done{background:#d1fae5;color:#059669}
+.inprogress{background:#dbeafe;color:#1d4ed8}
+.pending{background:#fef3c7;color:#b45309}
+.hold{background:#f1f5f9;color:#64748b}
+.priority{background:#fee2e2;color:#dc2626}
+.item-date{font-size:11px;color:#c4c9d4;margin-top:4px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.stat-card{background:#fff;border-radius:10px;padding:16px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.05);border:1px solid #e2e7ef}
+.stat-num{font-size:28px;font-weight:900;line-height:1}
+.stat-lbl{font-size:11px;color:#8a94a6;margin-top:5px;font-weight:600}
+.done-num{color:#059669}
+.progress-bar{height:6px;background:#e2e7ef;border-radius:3px;margin-bottom:24px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#00c9a7,#00a88a);border-radius:3px;transition:width .6s ease}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="page-head">
+    <h1>🛡️ SCAN&GO 개발 로드맵</h1>
+    <div class="sub">노무 리스크 방어 특화 QR 출퇴근 관리 SaaS · 마지막 업데이트: 2026-05-30</div>
+    <span class="updated">현재 버전: v0.8 — 노무가드 + 급여계산기 릴리즈</span>
+  </div>
+
+  <!-- 진행률 -->
+  <div class="stats">
+    <div class="stat-card"><div class="stat-num done-num">12</div><div class="stat-lbl">✅ 완료</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:#1d4ed8">2</div><div class="stat-lbl">🔄 진행중</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:#b45309">8</div><div class="stat-lbl">⏳ 대기</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:#64748b">4</div><div class="stat-lbl">🚫 보류</div></div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" style="width:46%"></div></div>
+
+  <!-- ── 완료 ── -->
+  <div class="section">
+    <div class="section-title">✅ 완료된 기능</div>
+    <div class="card">
+      <div class="item">
+        <div class="item-icon">📱</div>
+        <div class="item-body">
+          <div class="item-title">QR 출퇴근 시스템 <span class="badge done">완료</span></div>
+          <div class="item-desc">현장별 QR 발급, GPS 위치 검증, 실시간 출퇴근 기록</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="item-icon">💰</div>
+        <div class="item-body">
+          <div class="item-title">급여 자동 계산 + 급여명세서 PDF <span class="badge done">완료</span></div>
+          <div class="item-desc">시급/일급/월급제, 4대보험/프리랜서 공제, 야간·연장수당 자동 계산</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="item-icon">📊</div>
+        <div class="item-body">
+          <div class="item-title">엑셀 내보내기 (급여내역·출역일보·4대보험) <span class="badge done">완료</span></div>
+          <div class="item-desc">세무사/노무사 제출용 전문 양식, 크로스탭 출역일보, 4대보험 세분화</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="item-icon">⏰</div>
+        <div class="item-body">
+          <div class="item-title">주 52시간 자동 모니터링 <span class="badge done">완료</span></div>
+          <div class="item-desc">대시보드 주간 근로시간 집계, 48h 경고 · 52h 초과 배지</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="item-icon">🛡️</div>
+        <div class="item-body">
+          <div class="item-title">노무경보 배너 (퇴직금·주휴수당·52시간) <span class="badge done">완료</span></div>
+          <div class="item-desc">대시보드 상단 자동 경보: 퇴직금 임박(11개월+), 주휴수당 대상자, 52시간 초과</div>
+          <div class="item-date">2026-05-30 추가</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="item-icon">🧮</div>
+        <div class="item-body">
+          <div class="item-title">급여 계산기 (순방향·역방향) <span class="badge done">완료</span></div>
+          <div class="item-desc">2026 최저시급 10,320원 기준 · 시급→월급, 목표실수령액→시급 역산 · 사업주 총 인건비 포함</div>
+          <div class="item-date">2026-05-30 추가</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="item-icon">📋</div>
+        <div class="item-body">
+          <div class="item-title">직원 상세정보 (생년월일·입사일·계좌) <span class="badge done">완료</span></div>
+          <div class="item-desc">법정 임금대장 필수 기재사항 완비 (근로기준법 §48)</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="item-icon">🏢</div>
+        <div class="item-body">
+          <div class="item-title">사업장 정보 (사업자번호·대표자·주소) <span class="badge done">완료</span></div>
+          <div class="item-desc">설정 > 사업장 정보에서 입력, 엑셀 헤더에 자동 반영</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="item-icon">📤</div>
+        <div class="item-body">
+          <div class="item-title">엑셀 직원 일괄 등록 <span class="badge done">완료</span></div>
+          <div class="item-desc">템플릿 다운로드 → 직원 정보 작성 → 업로드 한 번으로 대량 등록</div>
+          <div class="item-date">2026-05-30 추가</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="item-icon">🔗</div>
+        <div class="item-body">
+          <div class="item-title">직원 초대 링크 생성 <span class="badge done">완료</span></div>
+          <div class="item-desc">설정에서 사업장 고유 초대 링크 생성·공유, 재생성 가능</div>
+          <div class="item-date">2026-05-30 추가</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="item-icon">💬</div>
+        <div class="item-body">
+          <div class="item-title">채널톡 고객지원 챗봇 <span class="badge done">완료</span></div>
+          <div class="item-desc">Channel.io 무료 플랜 삽입 완료. Plugin Key 교체만 하면 즉시 활성화</div>
+          <div class="item-date">2026-05-30 추가</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="item-icon">📣</div>
+        <div class="item-body">
+          <div class="item-title">포지셔닝 변경 — "노무 리스크 방어" <span class="badge done">완료</span></div>
+          <div class="item-desc">랜딩페이지 히어로·기능 카드·CTA 전면 교체 (편의성 → 공포 마케팅)</div>
+          <div class="item-date">2026-05-30 추가</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 진행중 ── -->
+  <div class="section">
+    <div class="section-title">🔄 진행중</div>
+    <div class="card">
+      <div class="item">
+        <div class="item-icon">📱</div>
+        <div class="item-body">
+          <div class="item-title">Google Play 신원인증 <span class="badge inprogress">진행중</span></div>
+          <div class="item-desc">개발자 신원 인증 이메일 대기 중 (2~7일 소요). 완료 후 AAB 재업로드 필요</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="item-icon">🔗</div>
+        <div class="item-body">
+          <div class="item-title">초대 링크 login.js 연동 <span class="badge inprogress">진행중</span></div>
+          <div class="item-desc">?join=TOKEN 파라미터 감지 → 직원 가입 시 해당 tenant 자동 연결 로직 (login.js 수정 필요)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 대기 ── -->
+  <div class="section">
+    <div class="section-title">⏳ 대기 (우선순위 순)</div>
+    <div class="card">
+      <div class="item">
+        <div class="item-icon">🏪</div>
+        <div class="item-body">
+          <div class="item-title">키오스크 모드 (직원 앱 설치 없이 출퇴근) <span class="badge priority">우선순위 높음</span></div>
+          <div class="item-desc">현장 태블릿 1대로 직원들이 이름 터치 → 출퇴근 체크. 사장님 온보딩 마찰 최대 감소 요인</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="item-icon">📸</div>
+        <div class="item-body">
+          <div class="item-title">사진 OCR 직원 등록 (Claude Vision API) <span class="badge pending">대기</span></div>
+          <div class="item-desc">직원 명단 사진/명함 촬영 → Claude API가 자동 파싱 → 직원 등록. 비용: 장당 약 0.01달러</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="item-icon">💳</div>
+        <div class="item-body">
+          <div class="item-title">결제 연동 (토스페이먼츠) <span class="badge pending">대기</span></div>
+          <div class="item-desc">직원 1인당 5,000원/월 구독. 토스페이먼츠 정기결제 API 연동</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="item-icon">📤</div>
+        <div class="item-body">
+          <div class="item-title">기존 데이터 가져오기 (타 앱 → SCAN&GO) <span class="badge pending">대기</span></div>
+          <div class="item-desc">출퇴근 기록 포함 엑셀 업로드. 알바체크·시프티 등 타 앱 내보내기 양식 파싱</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="item-icon">⚖️</div>
+        <div class="item-body">
+          <div class="item-title">퇴직금 계산기 + 자동 알림 고도화 <span class="badge pending">대기</span></div>
+          <div class="item-desc">평균임금 기반 퇴직금 정확 계산, 퇴직금 예상액 표시, 14일 내 지급 알림</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="item-icon">📊</div>
+        <div class="item-body">
+          <div class="item-title">사업주 4대보험 계산서 <span class="badge pending">대기</span></div>
+          <div class="item-desc">근로자 부담분 + 사업주 부담분 합계 엑셀. 세무사 제출용 4대보험 신고 보조자료</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="item-icon">📬</div>
+        <div class="item-body">
+          <div class="item-title">카카오 알림톡 연동 <span class="badge pending">대기</span></div>
+          <div class="item-desc">직원 초대, 급여 지급 완료, 노무 경보를 카카오톡으로 발송</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="item-icon">📈</div>
+        <div class="item-body">
+          <div class="item-title">인력사무소 파견 관리 고도화 <span class="badge pending">대기</span></div>
+          <div class="item-desc">파견처별 청구서 자동 생성, 파견 인원 현황 리포트, 파견처 단가 관리</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 보류 ── -->
+  <div class="section">
+    <div class="section-title">🚫 보류 (의도적으로 미진행)</div>
+    <div class="card">
+      <div class="item">
+        <div class="item-icon">🤖</div>
+        <div class="item-body">
+          <div class="item-title">Claude API 기반 노무 상담 챗봇 <span class="badge hold">보류</span></div>
+          <div class="item-desc">채널톡 → Claude API 교체. 근태 데이터 기반 개인화 노무 상담. 사용자 요청 시 진행</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="item-icon">🏗️</div>
+        <div class="item-body">
+          <div class="item-title">건설일용직 퇴직공제제도 연동 <span class="badge hold">보류</span></div>
+          <div class="item-desc">건설근로자공제회 API 연동. 일용직 공제부금 납부 현황 관리. 사용자 요청 시 진행</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="item-icon">🌐</div>
+        <div class="item-body">
+          <div class="item-title">다국어 지원 (베트남어·중국어) <span class="badge hold">보류</span></div>
+          <div class="item-desc">건설·인력사무소 외국인 근로자 대상. MVP 검증 후 진행 예정</div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="item-icon">🍎</div>
+        <div class="item-body">
+          <div class="item-title">iOS (App Store) 출시 <span class="badge hold">보류</span></div>
+          <div class="item-desc">Android Google Play 안정화 후 진행. 개발자 계정 비용 $99/년 발생</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center;font-size:12px;color:#c4c9d4;padding:20px 0">
+    SCAN&GO 개발 로드맵 v0.8 · 업데이트: 2026-05-30 · <a href="dashboard.html" style="color:#00c9a7">대시보드로 이동</a>
+  </div>
+
+</div>
+</body>
+</html>

@@ -14,7 +14,7 @@ export async function getMyProfile() {
   // 먼저 profiles + tenants 조인 시도
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, tenant_id, role, store_id, name, phone, email, hourly_wage, wage_type, deduction_type, position, active, is_super_admin, tutorial_owner_done, tutorial_employee_done, tenants(name, business_type, industry_type, plan, subscription_status, trial_ends_at, peak_employee_count)')
+    .select('id, tenant_id, role, store_id, name, phone, email, hourly_wage, wage_type, deduction_type, position, active, is_super_admin, tutorial_owner_done, tutorial_employee_done, tenants(name, business_type, industry_type, plan, subscription_status, trial_ends_at, peak_employee_count, business_number, ceo_name, address, invite_token)')
     .eq('id', user.id)
     .maybeSingle();
 
